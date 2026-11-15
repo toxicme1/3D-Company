@@ -406,12 +406,6 @@ async function runWorkflowTool(agent, name, args, context) {
     return { error: error.message };
   }
 }
-    if (!approval.approved) {
-      const message = approval.reason || 'The check was declined; it was not run.';
-      context.recordEvidence({ type: 'check_declined', check, reason: message });
-      return { approved: false, message };
-    }
-    status('running_check', 'QA is running the approved ' + check + ' check.');
 async function askWorkflowAgent(agent, text, rules, context) {
   if (!LOCAL_PROVIDER) {
     throw new Error('Repository tools are disabled for non-local providers so workspace code is not sent to a third party. Configure an OpenAI-compatible provider on localhost, 127.0.0.1, or [::1].');
