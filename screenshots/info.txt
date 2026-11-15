@@ -1,0 +1,44 @@
+Hey Claude, confirm if it works like that.
+
+I want you to help me build my own video-watching agent. It should be able to:
+
+1. Accept a YouTube video URL and “watch” or analyze the video.
+2. Accept videos that I upload, such as MP4, MOV, or WebM files.
+3. Summarize the video.
+4. Answer questions about what happens in the video.
+5. Find specific moments and give timestamps, for example: “Where do they explain pricing?”
+6. Extract key points, action items, names, products, dates, and important quotes.
+7. Create timestamped notes from the video.
+8. Let me ask follow-up questions after analyzing the video, without needing to upload it again.
+9. Save the video summary and important timestamps so I can search across videos later.
+10. Work like an assistant: I give it a video and a question, and it gives me a clear answer with timestamps.
+
+Please first confirm whether this is possible, then explain the best simple way to build it.
+
+Use this stack if possible:
+- Python
+- Streamlit for the web interface
+- Google Gemini API for video understanding
+- SQLite for saving video summaries and timestamps
+- A simple agent workflow that can decide whether to summarize, extract information, answer a question, or search saved videos
+
+Important rules:
+- Do not download copyrighted YouTube videos without permission.
+- For YouTube, use a method that works with public YouTube URLs.
+- For uploaded videos, support direct file upload.
+- Always include timestamps when the agent makes a claim about something in the video.
+- If a video cannot be analyzed, explain why and suggest an alternative.
+- Make the first version simple, but design it so I can add more features later.
+
+Start by giving me:
+1. A short confirmation of what is possible and what is not possible.
+2. The best architecture for version 1.
+3. The exact folder structure.
+4. All files with complete, runnable code.
+5. Installation commands.
+6. Environment variables I need to set.
+7. Instructions to run it.
+8. Example prompts I can use after uploading or pasting a video.
+9. A list of future upgrades, such as multi-video search, transcript storage, and a Telegram or WhatsApp interface.
+
+Do not give me a high-level plan only. Give me the complete working starter project.
