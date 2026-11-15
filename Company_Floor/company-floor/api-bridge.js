@@ -118,6 +118,18 @@ function promptMessages(m) {
   const instructions = profileText(name);
   let system = 'You are ' + who + ' in the Company Floor organization. Answer the user briefly, honestly, and in character. Never claim you ran, tested, changed, or verified anything you did not. You do not have tools and cannot edit files or execute commands.';
   if (instructions) system += '\n\nRole profile:\n' + instructions;
+  if (m.ceo && Array.isArray(m.directory)) {
+    const directory = m.directory.slice(0, 120).filter(p => p && typeof p.name === 'string' && typeof p.role === 'string' && typeof p.office === 'string')
+      .map(p => {
+        const plain = value => String(value).replace(/[\r\n]+/g, ' ').slice(0, 80);
+        return '- ' + plain(p.name) + ' — ' + plain(p.role) + ', ' + plain(p.office) +
+          (p.company === 'Social Media Co.' ? ' (Social Media Co.)' : '');
+      });
+    if (directory.length) {
+      system += '\n\nAuthoritative staff directory (use it to answer questions about employee names, roles, and offices; do not claim you lack the roster or invent staff):\n' + directory.join('\n');
+    }
+    system += '\n\nThe app can physically summon one named employee to the CEO office when the user asks to call or summon that person. Do not claim a summon happened unless the app confirms it.';
+  }
   if (m.ceo && m.decision && m.decision.kind === 'answer') system += '\n\nAnswer this message only; do not claim to start or complete a project.';
   if (m.ceo && m.decision && m.decision.kind === 'meeting') system += '\n\nThe Company Floor project flow is a visual simulation. Do not claim real offices were contacted, code was changed, or work was completed.';
   return [{ role: 'system', content: system }, { role: 'user', content: String(m.text || '').slice(0, 8000) }];

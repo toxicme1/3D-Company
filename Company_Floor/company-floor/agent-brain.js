@@ -85,6 +85,22 @@
 
   function headOf(people, officeIdx) { return people.filter(function (p) { return p.officeIdx === officeIdx && p.isHead; })[0] || null; }
 
+  function parseSummonCommand(text) {
+    var match = /^\s*(?:(?:please|can you|could you)\s+)?(?:call|bring|invite|summon)\s+(.+?)(?:\s+(?:to|into|in)\s+(?:(?:the|your|his|my)\s+)?(?:CEO(?:'s)?\s+)?office)?[.!?]*\s*$/i.exec(String(text || ''));
+    return match ? match[1].replace(/^(?:the|a|an)\s+/i, '').trim() : null;
+  }
+
+  function findPeople(people, query) {
+    var key = norm(query).trim().replace(/^(?:the|a|an) /, '').replace(/ (?:team|office)$/, '');
+    if (!key) return [];
+    var byName = people.filter(function (p) { return norm(p.name).trim() === key; });
+    if (byName.length) return byName;
+    var byRole = people.filter(function (p) { return norm(p.role).trim() === key; });
+    if (byRole.length) return byRole;
+    var byOfficeHead = people.filter(function (p) { return p.isHead && norm(p.office).trim() === key; });
+    return byOfficeHead;
+  }
+
   function reason(brain, ctx, text, opts) {
     opts = opts || {};
     var rand = opts.rand || Math.random, me = ctx.agent, people = ctx.people || [];
@@ -290,14 +306,33 @@
       return 'My view, in short: decide the smallest version that proves it works, then grow it. ' + (who ? 'The people who know this best are ' + who + '. ' : '') + 'If you want the offices to weigh in properly, say "call a meeting about this" and I will gather the right heads.';
     }
     if (d.intent === 'question') {
+      if (/\b(who is|who's|what does|what role|which office|where does|tell me about)\b/i.test(raw)) {
+        var matchingPeople = people.filter(function (p) { return norm(raw).indexOf(norm(p.name)) >= 0; });
+        if (matchingPeople.length) return matchingPeople.map(function (p) {
+          return p.name + ' is ' + p.role + ' in ' + p.office + (p.isHead ? ' and leads that office.' : '.');
+        }).join(' ');
+      }
+      if (/\b(list|show|name|who are|who works|employees|agents|staff|directory)\b/i.test(raw) &&
+          /\b(people|agents|employees|staff|team|directory|everyone|names)\b/i.test(raw) &&
+          !/\bhow many\b/i.test(raw)) {
+        return 'Here is the staff directory:\n' + people.map(function (p) {
+          return p.name + ' — ' + p.role + ', ' + p.office + (p.company === 'Social Media Co.' ? ' (Social Media Co.)' : '');
+        }).join('\n');
+      }
       if (/\b(who|which office|which team|who handles|who is responsible)\b/i.test(raw) && o.n) return brain.offices[o.idx].name + ' handles that. ' + (headOf(people, o.idx) || { name: 'The head' }).name + ' leads it. ' + brain.offices[o.idx].mission + ' Want me to start it as a project?';
-      if (/\b(how many|offices|people|team|who works)\b/i.test(raw)) return 'We have ' + brain.offices.length + ' offices and ' + people.filter(function (p) { return p.officeIdx >= 0; }).length + ' people. ' + busy + '.';
+      if (/\b(how many|offices|people|agents|employees|staff|team|who works)\b/i.test(raw)) {
+        var socialCount = people.filter(function (p) { return p.company === 'Social Media Co.'; }).length;
+        var companyCount = people.length - socialCount;
+        return 'I know the staff directory: ' + companyCount + ' people in Company Floor' +
+          (socialCount ? ' and ' + socialCount + ' in Social Media Co. (' + people.length + ' total)' : '') +
+          ', across ' + brain.offices.length + ' offices. ' + busy + '.';
+      }
       return (o.n ? 'That sits with ' + brain.offices[o.idx].name + '. ' : '') + 'I can answer the part I know, but I will not guess about work I have not seen. If you want it done or checked, tell me and I will call the heads.';
     }
     return pick(['Understood. ', 'Noted. ', 'Okay. '], rand) + (d.offer ? 'If that was a task, say what you want built and I will call the heads to a meeting.' : 'Tell me what you need.');
   }
   function phaseLabel(P) { return ({ gather: 'calling the office heads', meeting: 'in the meeting', approval: 'plan ready for you', running: 'the office simulation is running' })[P.phase] || P.phase; }
 
-  var api = { ceoDecide: ceoDecide, ceoAnswer: ceoAnswer, relevantOffices: relevantOffices, propose: propose, consolidate: consolidate, reason: reason, classify: classify, hits: hits, bestOffice: bestOffice, bestPerson: bestPerson, norm: norm };
+  var api = { ceoDecide: ceoDecide, ceoAnswer: ceoAnswer, relevantOffices: relevantOffices, propose: propose, consolidate: consolidate, reason: reason, classify: classify, hits: hits, bestOffice: bestOffice, bestPerson: bestPerson, findPeople: findPeople, parseSummonCommand: parseSummonCommand, norm: norm };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.CompanyBrain = api;
 })(typeof window !== 'undefined' ? window : this);

@@ -1816,7 +1816,7 @@
         var st = s.seat; st.taken = A; bodyOff(A); A.seat = st; A.mode = 'tr';
         startTr(A, st.x, st.z, st.y, st.yaw, 0.8, st.pose, function () {
           A.timer = s.until ? Math.max(4, s.until - NOW) : (s.dur || 10);
-          if (s.desk) { A.mode = 'desk'; A.plan = []; setTint(A, A.work); } else { A.mode = 'seated'; }
+          if (s.desk) { A.mode = 'desk'; A.plan = []; setTint(A, A.work); if (s.onArrive) s.onArrive(A); } else { A.mode = 'seated'; }
         });
         break;
       }
@@ -1859,7 +1859,7 @@
     nextStep(A);
   }
   function startMeeting(n) {
-    if (meeting || project) return false;
+    if (meeting || project || officeVisit) return false;
     var avail = agents.filter(function (A) { return isAtDesk(A) && !A.social; }).sort(function () { return Math.random() - 0.5; }).slice(0, n || 9);
     var seats = seatsMeet.slice().sort(function () { return Math.random() - 0.5; });
     if (avail.length < 2) return false;
@@ -1874,7 +1874,7 @@
     'I will write the scope and priorities', 'I will document it as we go', 'I will estimate the cost and set limits', 'I will run the final review and sign off'];
   var PHASE = { gather: 'Calling the office heads...', meeting: 'Heads are walking to the meeting room', discuss: 'Heads are discussing the plan', dispersing: 'Meeting is wrapping up',
     briefing: 'Heads are preparing simulated proposals', approval: 'The CEO sent you one plan. Reply in the CEO chat', working: 'Simulating team work' };
-  var project = null, projQueue = [], projEl;
+  var project = null, projQueue = [], projEl, officeVisit = null;
   (function () {
     var st = document.createElement('style');
     st.textContent = '.task{display:flex;gap:6px;margin-top:8px}.task input{flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--chip);color:var(--fg);font:400 .8125rem var(--f-body)}.task .chip{flex:none}.proj{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--chip);font:400 .72rem/1.35 var(--f-mono);color:var(--muted)}.proj b{color:var(--fg);font:600 .8rem/1.3 var(--f-body)}.proj .ph{color:var(--accent)}';
@@ -1900,12 +1900,32 @@
   function assignTask(text) {
     text = String(text || '').trim(); if (!text || !ceoA) return { ok: false, reply: '' };
     if (meeting && !meeting.project) { meeting.members.forEach(function (A) { if (A.mode === 'seated') A.timer = 0.01; }); meeting = null; }
-    if (project || meeting) {
+    if (project || meeting || officeVisit) {
       projQueue.push({ text: text }); updateProjUI();
-      return { ok: true, queued: true, reply: 'One moment. I will start "' + clip(text, 50) + '" as soon as the current meeting or project wraps up.' };
+      return { ok: true, queued: true, reply: 'One moment. I will start "' + clip(text, 50) + '" as soon as the current meeting, project, or office visit wraps up.' };
     }
     beginProject(text);
     return { ok: true, reply: 'Understood: "' + clip(text, 60) + '". I am calling the heads of the offices involved to the meeting room now.' };
+  }
+  function callEmployee(A) {
+    if (!A || agents.indexOf(A) < 0) return { ok: false, reply: 'I could not find that employee in the staff directory.' };
+    if (!avatarsOn || !nav.byName.CEOw2) return { ok: false, reply: 'The 3D floor is unavailable, so I cannot bring anyone into the office right now.' };
+    if (project || meeting) return { ok: false, reply: 'I cannot call someone into my office while a meeting or project is in progress.' };
+    if (officeVisit) return { ok: false, reply: officeVisit.name + ' is already visiting my office. I can call another person when they return.' };
+    if (!isAtDesk(A)) return { ok: false, reply: A.name + ' is away from their desk. Please try again when they are back.' };
+
+    officeVisit = A;
+    var yaw = Math.atan2(ceoA.root.position.x - A.root.position.x, ceoA.root.position.z - A.root.position.z);
+    var returnPlan = goHome(A);
+    returnPlan[1].onArrive = function () { officeVisit = null; };
+    A.plan = [
+      { t: 'rise' },
+      { t: 'go', n: 'CEOw2' },
+      { t: 'do', pose: 'talkstand', dur: 12, yaw: yaw, talk: true, node: 'CEOw2' }
+    ].concat(returnPlan);
+    plog(A, 'was called to the CEO office');
+    nextStep(A);
+    return { ok: true, reply: A.name + ' (' + A.role + ', ' + A.office + ') is walking to my office for a brief visit. This is a visual simulation, not a real conversation.' };
   }
   function beginProject(text) {
     project = { task: text, phase: 'gather', t0: NOW };
@@ -1934,7 +1954,7 @@
     setTimeout(function () { if (window.__officeSay) window.__officeSay(H, text); }, delay || 1400);
   }
   function allHeads() { return (project.heads || []).concat(project.absent || []); }
-  function pOf(A) { return { id: A.id, name: A.name, role: A.role, office: A.office, officeIdx: A.officeIdx, roleIdx: A.id % 5, isHead: !!A.isHead }; }
+  function pOf(A) { return { id: A.id, name: A.name, role: A.role, office: A.office, company: A.social ? 'Social Media Co.' : 'Company Floor', officeIdx: A.officeIdx, roleIdx: A.id % 5, isHead: !!A.isHead }; }
   function sendProposal(H) {
     H.proposal = CompanyBrain.propose(COMPANY_BRAIN, pOf(H), project.task, HEAD_LINE[H.officeIdx]);
     say(H, 'Proposal sent to the CEO'); plog(H, 'sent a proposal to the CEO'); updateProjUI();
@@ -1982,7 +2002,7 @@
   }
   function projectStep(t) {
     if (!ceoA) return;
-    if (!project) { if (!meeting && projQueue.length && isAtDesk(ceoA)) beginProject(projQueue.shift().text); return; }
+    if (!project) { if (!meeting && !officeVisit && projQueue.length && isAtDesk(ceoA)) beginProject(projQueue.shift().text); return; }
     var Pj = project, hs = agents.filter(function (A) { return A.isHead && !A.social; });
     if (Pj.phase === 'gather') { Pj.involved = Pj.involved || CompanyBrain.relevantOffices(COMPANY_BRAIN, Pj.task); hs = hs.filter(function (A) { return Pj.involved.indexOf(A.officeIdx) >= 0; }); }
     if (Pj.phase === 'gather') {
@@ -2145,7 +2165,7 @@
     world.add(A.root); ceoA = A;
   }
   // at his desk the CEO picks his own tasks; away from it he uses the same walking / sitting logic as everyone else
-  window.__floor = { assignTask: function (t) { return assignTask(t); }, ceo: function () { return ceoA; }, project: function () { return project; } };
+  window.__floor = { assignTask: function (t) { return assignTask(t); }, callEmployee: callEmployee, ceo: function () { return ceoA; }, project: function () { return project; } };
   function stepCeo(dt, t) {
     var A = ceoA; if (!A) return;
     if (A.mode === 'desk') {
@@ -2216,7 +2236,7 @@
     if (!avatarsOn) return;
     NOW = t; physicsStep(dt);
     if (t > nextCoffeeAt) { nextCoffeeAt = t + 9 + Math.random() * 12; var away = agents.filter(function (A) { return A.mode !== 'desk' && A.mode !== 'seated'; }).length; if (away < 6) { var c = agents.filter(isAtDesk); if (c.length) coffeePlan(pickOne(c)); } }
-    if (t > nextMeetingAt && !meeting && !project && !projQueue.length) { nextMeetingAt = t + 120; startMeeting(9); }
+    if (t > nextMeetingAt && !meeting && !project && !officeVisit && !projQueue.length) { nextMeetingAt = t + 120; startMeeting(9); }
     if (meeting) {
       if (t > meeting.next && !meeting.project) {
         meeting.next = t + 5 + Math.random() * 4;
@@ -2656,6 +2676,29 @@
     };
     function dispatch(id, m) {
       if (m.text && window.__social && window.__social.route(id, m)) return;
+      if (id === 'ceo' && m.text) {
+        var target = CompanyBrain.parseSummonCommand(m.text);
+        if (target) {
+          var matches = CompanyBrain.findPeople(agents, target);
+          var officeRequest = /\b(?:to|into|in)\s+(?:(?:the|your|his|my)\s+)?(?:CEO(?:'s)?\s+)?office\b/i.test(m.text);
+          var summonRequest = /^\s*(?:(?:please|can you|could you)\s+)?summon\b/i.test(m.text);
+          if (matches.length === 1) {
+            var floor = window.__floor;
+            var result = floor && floor.callEmployee ? floor.callEmployee(matches[0]) : { reply: 'The floor is not ready to call anyone right now.' };
+            deliver(id, 'ceo', result.reply, false, { why: result.ok ? 'The app is bringing the named employee to the CEO office.' : 'The requested office visit could not start.' });
+            return;
+          }
+          if (officeRequest || summonRequest) {
+            var response = matches.length > 1
+              ? 'That matches more than one employee. Please use a specific name: ' + matches.map(function (p) { return p.name; }).join(', ') + '.'
+              : /\b(everyone|everybody|all staff|the whole team)\b/i.test(target)
+                ? 'The CEO office is for one employee at a time. Ask me to call a meeting to gather the relevant office heads.'
+                : 'I could not find "' + target + '" in the staff directory. Use an exact employee name or role.';
+            deliver(id, 'ceo', response, false, { why: 'A specific employee must be identified for an office visit.' });
+            return;
+          }
+        }
+      }
       var pr = id === 'ceo' && !!m.text && planReply(m.text);
       var dec = (id === 'ceo' && m.text && !pr) ? ceoDecision(m.text) : null, tk = null;
       if (dec && dec.kind === 'meeting') { tk = assignTask(m.text.replace(/^\/(task|project|meeting)\s*/i, '') || m.text); tk.why = dec.why; }
@@ -2667,7 +2710,7 @@
     var DOING = { thinking: 'thinking through a plan', writing: 'writing', coding: 'coding', running: 'running a command', researching: 'researching', idle: 'free', mcp: 'using an MCP tool' };
     // ---------- reasoning: every employee works out who they are and whose job this is before acting ----------
     var think = {};
-    function pOf(A) { return { id: A.id, name: A.name, role: A.role, office: A.office, officeIdx: A.officeIdx, roleIdx: A.id % 5, isHead: !!A.isHead }; }
+    function pOf(A) { return { id: A.id, name: A.name, role: A.role, office: A.office, company: A.social ? 'Social Media Co.' : 'Company Floor', officeIdx: A.officeIdx, roleIdx: A.id % 5, isHead: !!A.isHead }; }
     function peopleList(list) { return (list || agents).map(pOf); }
     function profileOf(A) { if (!A) return null; var r = (COMPANY_BRAIN.roles[A.officeIdx] || [])[A.id % 5] || { duty: A.role }; var om = (COMPANY_BRAIN.offices[A.officeIdx] || offices[A.officeIdx] || {}).mission; return { agentProfile: agentProfileOf(A), id: A.id, name: A.name, role: A.role, office: A.office, isHead: !!A.isHead, duties: r.duty, officeMission: om, company: A.social ? 'Social Media Co.' : 'Company' }; }
     function pickResponder(id, text) {
@@ -2766,7 +2809,7 @@
     }
     function bridgePayload(request) {
       var id = request.id, m = request.message;
-      return {
+      var payload = {
         type: 'message',
         conv: id,
         agent: id[0] === 'a' ? +id.slice(1) : null,
@@ -2780,6 +2823,8 @@
         att: m.att ? { kind: m.att.kind, name: m.att.name } : null,
         ts: m.ts
       };
+      if (id === 'ceo') payload.directory = peopleList(agents);
+      return payload;
     }
     function sendToBridge(request) {
       if (!ws || ws.readyState !== WebSocket.OPEN) return false;

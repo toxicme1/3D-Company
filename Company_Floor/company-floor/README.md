@@ -19,6 +19,9 @@ The bridge sends the latest chat message and the selected role profile to the mo
 
 This project flow is a visual simulation, not a workflow engine that dispatches coding work to each office. API chat is separate and calls the configured model for a response.
 
+## CEO staff directory and office visits
+The CEO chat receives the live staff directory, including names, roles, and offices, so it can answer questions such as “What does Amina do?” or “List all employees and their roles.” To bring one person to the CEO office, ask “Call Amina to your office” or “Summon the Head of Security.” The person walks over for a brief visual visit, then returns to their desk. Only one person can visit at a time; the CEO will explain if they are away or another meeting is in progress. This is a scene simulation, not a real conversation with an employee.
+
 ## Files
 - `index.html`: 3D scene, chat UI, and simulation.
 - `agent-brain.js`: keyword-based message routing, role reasoning, and plan formatting.
