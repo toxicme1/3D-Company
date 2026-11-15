@@ -47,11 +47,19 @@ window.AGENT_MAP = {
   "Bug Triager": "debugger",
   "Code Reviewer": "code-reviewer",
   "Skill Author": "prompt-engineer",
-  "Data Engineer": "python-pro"
+  "Data Engineer": "python-pro",
+  "Video Researcher": "video-researcher",
+  "Scriptwriter": "script-writer",
+  "Video Editor": "video-editor"
  },
  "social": [
   "instagram-manager",
   "tiktok-manager",
   "youtube-manager"
+ ],
+ "video": [
+  "video-researcher",
+  "script-writer",
+  "video-editor"
  ]
 };

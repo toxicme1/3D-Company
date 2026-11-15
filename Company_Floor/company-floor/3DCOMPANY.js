@@ -38,7 +38,7 @@ function validSettings(settings) {
   try {
     const url = new URL(settings.baseUrl);
     return (url.protocol === 'https:' ||
-      (url.protocol === 'http:' && ['localhost', '127.0.0.1', '::1'].includes(url.hostname))) &&
+      (url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname))) &&
       !url.username && !url.password && !url.search && !url.hash;
   } catch (error) {
     return false;
@@ -200,6 +200,22 @@ function openPage(url) {
 }
 
 async function main() {
+  if (process.argv.includes('--help') || process.argv.includes('-h')) {
+    console.log(`Company Floor Launcher
+
+Usage:
+  3DCOMPANY [options]
+
+Options:
+  --setup              Run the interactive API provider setup wizard
+  --test-api           Test connection to the provider and list available models
+  --workspace <path>   Set the workspace root for agent workflows
+  --help, -h           Show this help message
+
+Documentation:
+  See SETUP.md and README.md for details.`);
+    return;
+  }
   rl = readline.createInterface({ input: stdin, output: stdout });
   let settings = readSettings();
   if (process.argv.includes('--test-api')) {
@@ -255,12 +271,18 @@ async function main() {
   pageUrl.searchParams.set('bridge', bridgeUrl);
   console.log('\nStarting the local API bridge. Press Ctrl+C to stop it.');
 
-  const bridge = spawn(process.execPath, [
+  const bridgeArgs = [
     path.join(APP_DIR, 'api-bridge.js'),
     '--dir', WORKSPACE,
     '--port', String(port),
     '--token', token
-  ], { cwd: APP_DIR, stdio: 'inherit' });
+  ];
+  const wsIdx = process.argv.indexOf('--workspace');
+  if (wsIdx > 0 && process.argv[wsIdx + 1]) {
+    bridgeArgs.push('--workspace', path.resolve(process.argv[wsIdx + 1]));
+  }
+
+  const bridge = spawn(process.execPath, bridgeArgs, { cwd: APP_DIR, stdio: 'inherit' });
   bridge.on('error', error => {
     console.error('Could not start API bridge: ' + error.message);
     process.exitCode = 1;
@@ -280,7 +302,7 @@ if (require.main === module) {
   main().catch(error => {
     console.error(error.message);
     process.exitCode = 1;
-  }).finally(() => rl.close());
+  }).finally(() => { if (rl) rl.close(); });
 }
 
 module.exports = { fetchModels, validSettings };

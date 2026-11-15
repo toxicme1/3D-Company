@@ -1,0 +1,12 @@
+node_modules/
+*.tmp
+.env
+.env.*
+setting.json
+Company_Floor/company-floor/setting.json
+Company_Floor/Workspace/.os/*
+!Company_Floor/Workspace/.os/.gitkeep
+Company_Floor/Workspace/.preview/*
+!Company_Floor/Workspace/.preview/.gitkeep
+Company_Floor/Workspace/social/outbox/*
+!Company_Floor/Workspace/social/outbox/.gitkeep

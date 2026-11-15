@@ -600,6 +600,44 @@
   for (var oi = 0; oi < OFFICE_NAMES.length; oi++) buildOffice(oi);
   for (var si = 16; si < 19; si++) buildSocialOffice(si);
 
+  // ---------- Video Studio Co.: a separate three-room video production studio ----------
+  var VIDEO = [
+    { name: 'Video Research', hue: 202, mission: 'Reviews footage, transcripts and sources; records claims with timestamps.' },
+    { name: 'Script & Story', hue: 278, mission: 'Builds concise scripts, summaries and timestamped notes.' },
+    { name: 'Editing & Review', hue: 32, mission: 'Checks edits, key moments and final video summaries.' }
+  ];
+  var VID_CX = [-11, 0, 11], VID_Z = -48;
+  box(world, 34, 0.3, 22, M(0xaab3bb), 0, -0.15, VID_Z);
+  plane(world, 33, 21, F(0xd7dfe6), 0, 0.015, VID_Z);
+  wall(0, VID_Z - 11, 34.2, 0.2);
+  wall(-17, VID_Z, 0.2, 22);
+  wall(17, VID_Z, 0.2, 22);
+  wall(-12, VID_Z + 11, 10, 0.2);
+  wall(12, VID_Z + 11, 10, 0.2);
+  box(walls, 14, H - 2.4, 0.2, mWall, 0, 2.4 + (H - 2.4) / 2, VID_Z + 11);
+  [-5.5, 5.5].forEach(function (x) { wall(x, VID_Z, 0.15, 20); });
+  VID_CX.forEach(function (x, i) {
+    var hue = VIDEO[i].hue;
+    box(world, 9.8, 0.45, 0.12, M(hslHex(hue, 0.65, 0.5), { roughness: 0.6 }), x, H - 0.25, VID_Z + 10.85);
+    var office = new THREE.Group(); office.position.set(x, 0, VID_Z); world.add(office);
+    plane(office, 9.8, 20.8, F(hslHex(hue, 0.26, 0.82)), 0, 0.02, 0);
+    [[-2.7, -5, 0], [0, -5, 0], [2.7, -5, 0], [-1.4, 0, Math.PI], [1.4, 0, Math.PI]]
+      .forEach(function (p) { var desk = makeDesk(hue); desk.position.set(p[0], 0, p[1]); desk.rotation.y = p[2]; office.add(desk); });
+    makePlant(office, 4, 8.5, 0.85);
+    decorate(office, 19 + i, hue, VIDEO[i]);
+  });
+  (function () {
+    var c = document.createElement('canvas'); c.width = 1024; c.height = 256; var x = c.getContext('2d');
+    x.fillStyle = '#14232e'; x.fillRect(0, 0, 1024, 256);
+    x.fillStyle = '#5ec9d6'; x.fillRect(0, 0, 18, 256);
+    x.fillStyle = '#fff'; x.font = '700 72px "IBM Plex Sans", system-ui, sans-serif'; x.fillText('VIDEO STUDIO CO.', 52, 112);
+    x.fillStyle = 'rgba(255,255,255,.82)'; x.font = '400 34px "IBM Plex Sans", system-ui, sans-serif';
+    x.fillText('Research  ·  Script  ·  Edit', 54, 180);
+    var texture = new THREE.CanvasTexture(c); texture.anisotropy = 4;
+    var sign = new THREE.Mesh(new THREE.PlaneGeometry(7, 1.75), new THREE.MeshBasicMaterial({ map: texture }));
+    sign.position.set(0, H + 1.1, VID_Z + 11.12); sign.userData.skip = true; world.add(sign); wallItems.push(sign);
+  })();
+
   // ---------- meeting room ----------
   var mx = -17;
   var mGlass = new THREE.MeshStandardMaterial({ color: 0x9fd0e0, transparent: true, opacity: 0.2, roughness: 0.08, depthWrite: false });
@@ -920,6 +958,7 @@
   addHit('coffee', 'Coffee', coffeeX, 0, 16, 10);
   addHit('lobby', 'Core', 0, 0, 18, 16);
   (function () { var m = new THREE.Mesh(boxGeo(4.6, 3.8, 4.8), new THREE.MeshBasicMaterial({ visible: false })); m.position.set(3.6, 1.9, -2.7); m.userData = { key: 'ceo', name: 'CEO Office' }; scene.add(m); hits.push(m); })();
+  (function () { var m = new THREE.Mesh(boxGeo(34, 4, 22), new THREE.MeshBasicMaterial({ visible: false })); m.position.set(0, 2, VID_Z); m.userData = { key: 'video', name: 'Video Studio Co.' }; scene.add(m); hits.push(m); })();
 
   // ---------- camera views ----------
   var VIEWS = {
@@ -927,7 +966,8 @@
     coffee: { pos: [17, 13, 14], tgt: [17, 0.5, 0] },
     lobby: { pos: [0, 12, 15], tgt: [0, 0.8, 0] },
     ceo: { pos: [3.6, 11, 5.5], tgt: [3.6, 0.5, -2.7] },
-    social: { pos: [58, 30, 72], tgt: [58, 0.5, 46] }
+    social: { pos: [58, 30, 72], tgt: [58, 0.5, 46] },
+    video: { pos: [0, 28, -24], tgt: [0, 0.5, VID_Z] }
   };
   offices.forEach(function (o, i) {
     VIEWS['o' + i] = { pos: [o.cx, 12, o.cz + (o.north ? 9.5 : -9.5)], tgt: [o.cx, 0.5, o.cz + (o.north ? -0.5 : 0.5)] };
@@ -973,7 +1013,7 @@
     b.addEventListener('click', function () { flyTo(key); });
     parent.appendChild(b); btns[key] = b; return b;
   }
-  addBtn(viewsEl, 'overview', 'Overview'); addBtn(viewsEl, 'meeting', 'Meeting room'); addBtn(viewsEl, 'coffee', 'Coffee'); addBtn(viewsEl, 'lobby', 'Core'); addBtn(viewsEl, 'ceo', 'CEO Office'); addBtn(viewsEl, 'social', 'Social Media Co.');
+  addBtn(viewsEl, 'overview', 'Overview'); addBtn(viewsEl, 'meeting', 'Meeting room'); addBtn(viewsEl, 'coffee', 'Coffee'); addBtn(viewsEl, 'lobby', 'Core'); addBtn(viewsEl, 'ceo', 'CEO Office'); addBtn(viewsEl, 'social', 'Social Media Co.'); addBtn(viewsEl, 'video', 'Video Studio Co.');
   offices.forEach(function (o, i) {
     addBtn(officesEl, 'o' + i, o.name, 'o', o.hue);
   });
@@ -1874,10 +1914,10 @@
     'I will write the scope and priorities', 'I will document it as we go', 'I will estimate the cost and set limits', 'I will run the final review and sign off'];
   var PHASE = { gather: 'Calling the office heads...', meeting: 'Heads are walking to the meeting room', discuss: 'Heads are discussing the plan', dispersing: 'Meeting is wrapping up',
     briefing: 'Heads are preparing simulated proposals', approval: 'The CEO sent you one plan. Reply in the CEO chat', working: 'Simulating team work' };
-  var project = null, projQueue = [], projEl, officeVisit = null;
+  var project = null, projQueue = [], projEl, workflowEl, workflowState = null, officeVisit = null;
   (function () {
     var st = document.createElement('style');
-    st.textContent = '.task{display:flex;gap:6px;margin-top:8px}.task input{flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--chip);color:var(--fg);font:400 .8125rem var(--f-body)}.task .chip{flex:none}.proj{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--chip);font:400 .72rem/1.35 var(--f-mono);color:var(--muted)}.proj b{color:var(--fg);font:600 .8rem/1.3 var(--f-body)}.proj .ph{color:var(--accent)}';
+    st.textContent = '.task{display:flex;gap:6px;margin-top:8px}.task input{flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--chip);color:var(--fg);font:400 .8125rem var(--f-body)}.task .chip{flex:none}.proj{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--chip);font:400 .72rem/1.35 var(--f-mono);color:var(--muted)}.proj b{color:var(--fg);font:600 .8rem/1.3 var(--f-body)}.proj .ph{color:var(--accent)}.proj.real{border:1px solid #287b82;background:rgba(20,105,112,.14)}.proj.real .ph{color:#55c7c1}';
     document.head.appendChild(st);
   })();
   function clip(str, n) { str = String(str); return str.length > n ? str.slice(0, n - 3) + '...' : str; }
@@ -1885,18 +1925,61 @@
   function plog(A, text) { if (window.__feedLog) window.__feedLog(A, text); }
   function ceoMsg(text) { if (window.__ceoSay) window.__ceoSay(text); }
   function updateProjUI() {
-    if (!projEl) return;
-    if (!project && !projQueue.length) { projEl.hidden = true; return; }
-    projEl.hidden = false; projEl.innerHTML = '';
-    if (project) {
-      projEl.appendChild(el('b', '', clip(project.task, 70)));
-      projEl.appendChild(el('span', 'ph', PHASE[project.phase]));
-      var all = (project.heads || []).concat(project.absent || []);
-      if (project.phase !== 'gather' && project.phase !== 'meeting') all.forEach(function (H) { projEl.appendChild(el('span', '', (H.proposal ? '[x] ' : '[ ] ') + H.office + ': ' + (project.approval === 'approved' ? 'started' : H.proposal ? 'proposal sent to the CEO' : 'preparing'))); });
-      if (project.phase === 'approval' && project.approval !== 'approved') { var ab = el('button', 'chip', 'Approve plan'); ab.type = 'button'; ab.addEventListener('click', approveAll); projEl.appendChild(ab); }
+    if (projEl) {
+      projEl.hidden = !project && !projQueue.length;
+      if (!projEl.hidden) {
+        projEl.innerHTML = '';
+        if (project) {
+          projEl.appendChild(el('b', '', clip(project.task, 70)));
+          projEl.appendChild(el('span', 'ph', PHASE[project.phase]));
+          var all = (project.heads || []).concat(project.absent || []);
+          if (project.phase !== 'gather' && project.phase !== 'meeting') all.forEach(function (H) { projEl.appendChild(el('span', '', (H.proposal ? '[x] ' : '[ ] ') + H.office + ': ' + (project.approval === 'approved' ? 'started' : H.proposal ? 'proposal sent to the CEO' : 'preparing'))); });
+          if (project.phase === 'approval' && project.approval !== 'approved') { var ab = el('button', 'chip', 'Approve plan'); ab.type = 'button'; ab.addEventListener('click', approveAll); projEl.appendChild(ab); }
+        }
+        if (projQueue.length) projEl.appendChild(el('span', '', projQueue.length + ' more task' + (projQueue.length > 1 ? 's' : '') + ' queued'));
+      }
     }
-    if (projQueue.length) projEl.appendChild(el('span', '', projQueue.length + ' more task' + (projQueue.length > 1 ? 's' : '') + ' queued'));
+    if (workflowEl) {
+      workflowEl.hidden = !workflowState;
+      if (workflowState) {
+        workflowEl.innerHTML = '';
+        var stateLabel = {
+          running: 'Running',
+          waiting_for_approval: 'Waiting for your approval',
+          completed: 'Completed',
+          failed: 'Failed'
+        }[workflowState.status] || 'Starting';
+        var stageLabel = String(workflowState.stage || 'starting').replace(/_/g, ' ');
+        workflowEl.appendChild(el('b', '', 'REAL WORKFLOW · ' + stateLabel));
+        workflowEl.appendChild(el('span', 'ph', stageLabel + (workflowState.activeAgent ? ' · ' + workflowState.activeAgent : '')));
+        workflowEl.appendChild(el('span', '', clip(workflowState.task || '', 100)));
+        workflowEl.appendChild(el('span', '', clip(workflowState.message || '', 180)));
+        if (workflowState.status === 'waiting_for_approval') {
+          var approvalButton = el('button', 'chip', 'Review approval in Tools');
+          approvalButton.type = 'button';
+          approvalButton.addEventListener('click', function () {
+            if (window.__openWorkflowApprovals) window.__openWorkflowApprovals();
+          });
+          workflowEl.appendChild(approvalButton);
+        }
+      }
+    }
   }
+  window.__workflowUpdate = function (state) {
+    if (!state || typeof state !== 'object' || typeof state.id !== 'string') return;
+    if (workflowState && Number(state.updatedAt || 0) < Number(workflowState.updatedAt || 0)) return;
+    workflowState = {
+      id: state.id,
+      task: String(state.task || ''),
+      status: String(state.status || 'running'),
+      stage: String(state.stage || 'starting'),
+      activeAgent: String(state.activeAgent || ''),
+      approvalId: String(state.approvalId || ''),
+      message: String(state.message || ''),
+      updatedAt: Number(state.updatedAt || Date.now())
+    };
+    updateProjUI();
+  };
   function assignTask(text) {
     text = String(text || '').trim(); if (!text || !ceoA) return { ok: false, reply: '' };
     if (meeting && !meeting.project) { meeting.members.forEach(function (A) { if (A.mode === 'seated') A.timer = 0.01; }); meeting = null; }
@@ -2302,7 +2385,8 @@
     var tgp = el('div', 'group'); tgp.appendChild(el('span', 'lab', 'Task for the CEO'));
     var tfm = el('form', 'task'), tin = el('input'), tbt = el('button', 'chip', 'Assign');
     tin.placeholder = 'e.g. Build the login page'; tin.maxLength = 140; tin.setAttribute('aria-label', 'Task for the CEO'); tbt.type = 'submit';
-    tfm.appendChild(tin); tfm.appendChild(tbt); projEl = el('div', 'proj'); projEl.hidden = true; tgp.appendChild(tfm); tgp.appendChild(projEl);
+    tfm.appendChild(tin); tfm.appendChild(tbt); projEl = el('div', 'proj'); projEl.hidden = true;
+    workflowEl = el('div', 'proj real'); workflowEl.hidden = true; tgp.appendChild(tfm); tgp.appendChild(projEl); tgp.appendChild(workflowEl); updateProjUI();
     tfm.addEventListener('submit', function (e) {
       e.preventDefault(); var v = tin.value.trim(); if (!v) return; tin.value = '';
       var r = assignTask(v); if (window.__ceoHear) { window.__ceoHear(v); setTimeout(function () { if (r.reply) window.__ceoSay(r.reply); }, 900); }
@@ -2676,6 +2760,24 @@
     };
     function dispatch(id, m) {
       if (m.text && window.__social && window.__social.route(id, m)) return;
+      if (id === 'ceo' && m.text && /^\/workflow(?:\s|$)/i.test(m.text)) {
+        var workflowTask = m.text.replace(/^\/workflow\s*/i, '').trim();
+        if (!workflowTask) {
+          deliver(id, 'ceo', 'Add a task after /workflow, for example: /workflow review the login flow and suggest improvements.', false);
+          return;
+        }
+        if (!window.__bridgeOnline || !window.__bridgeOnline()) {
+          deliver(id, 'ceo', 'A real agent workflow needs the API bridge. Connect it first, then send /workflow followed by your task. No work was started.', false);
+          return;
+        }
+        var workflowId = uid();
+        if (!window.__bridgeSend({ type: 'workflow', id: workflowId, conv: 'ceo', task: workflowTask })) {
+          deliver(id, 'ceo', 'I could not send the workflow to the API bridge. Check the connection and try again. No work was started.', false);
+          return;
+        }
+        deliver(id, 'ceo', 'Starting the real agent workflow for: "' + clip(workflowTask, 100) + '". I will report each handoff here.', false);
+        return;
+      }
       if (id === 'ceo' && m.text) {
         var target = CompanyBrain.parseSummonCommand(m.text);
         if (target) {
@@ -2788,6 +2890,18 @@
     function setConn(text, on) { connEl.classList.toggle('on', !!on); connEl.querySelector('span').textContent = text; if (window.__bridgeState) window.__bridgeState(!!on); }
     window.__bridgeSend = function (o) { if (!ws || ws.readyState !== WebSocket.OPEN) return false; try { ws.send(JSON.stringify(o)); return true; } catch (e) { return false; } };
     window.__bridgeOnline = function () { return !!ws && ws.readyState === WebSocket.OPEN; };
+    window.__bridgeHttpEndpoint = function (pathname) {
+      if (!S.url) return '';
+      try {
+        var target = new URL(S.url);
+        target.protocol = target.protocol === 'wss:' ? 'https:' : 'http:';
+        target.pathname = pathname;
+        target.hash = '';
+        return target.href;
+      } catch (error) {
+        return '';
+      }
+    };
     function markDelivered(request) {
       if (request.message.st !== 'sending') return;
       request.message.st = 'delivered'; save();
@@ -3125,6 +3239,8 @@
   // ---------- Tools panel: install from link, approvals, history, social status, scene settings ----------
   var Tools = (function () {
     var st = { approvals: [], jobs: [], status: {}, log: [], online: false }, tab = 'install', open = false;
+    var videoFile = null, videoUrl = '', videoQuestion = '', videoPermission = false, videoBusy = false, videoMessage = '', videoResult = null, videoHistory = [];
+    try { videoHistory = JSON.parse(localStorage.getItem('cf.video.history') || '[]'); if (!Array.isArray(videoHistory)) videoHistory = []; } catch (error) { videoHistory = []; }
     var btn = document.createElement('button'); btn.textContent = 'Tools'; btn.setAttribute('aria-label', 'Open tools panel');
     btn.style.cssText = 'position:fixed;left:132px;bottom:12px;z-index:20;min-height:44px;padding:0 16px;border-radius:22px;border:1px solid #3a4651;background:#1d252c;color:#dfe7ec;font:600 14px sans-serif;cursor:pointer';
     var badge = document.createElement('span'); badge.style.cssText = 'margin-left:6px;background:#e8ab5d;color:#16202a;border-radius:10px;padding:1px 7px;font-size:12px'; badge.hidden = true; btn.appendChild(badge);
@@ -3136,7 +3252,7 @@
     function button(text, fn, css) { var b = mk('button', text, 'min-height:44px;padding:0 14px;border-radius:10px;border:1px solid #3a4651;background:#1d252c;color:#dfe7ec;font:600 14px sans-serif;cursor:pointer;' + (css || '')); b.type = 'button'; b.addEventListener('click', fn); return b; }
     function send(o) { return window.__bridgeSend ? window.__bridgeSend(o) : false; }
     function offline(parent) { if (!st.online) parent.appendChild(mk('p', 'The API bridge is not connected. Start it (node api-bridge.js) and link it from the chat. Offline agents are simulated.', 'color:#e8ab5d;margin:0 0 10px')); }
-    var TABS = ['install', 'approvals', 'history', 'social', 'scene'];
+    var TABS = ['install', 'video', 'approvals', 'history', 'social', 'scene'];
     function render() {
       tabs.innerHTML = ''; body.innerHTML = '';
       TABS.forEach(function (t) { var b = button(t === 'approvals' ? 'Approvals' + (st.approvals.length ? ' (' + st.approvals.length + ')' : '') : t[0].toUpperCase() + t.slice(1), function () { tab = t; render(); }, t === tab ? 'background:#0a7a87;border-color:#0a7a87' : ''); tabs.appendChild(b); });
@@ -3148,11 +3264,79 @@
         inp.type = 'url'; inp.placeholder = 'https://github.com/...'; inp.setAttribute('aria-label', 'Link to install from'); f.appendChild(inp); var go = button('Research it', function () {}); go.type = 'submit'; f.appendChild(go);
         f.addEventListener('submit', function (e) { e.preventDefault(); var u = inp.value.trim(); if (!/^https:\/\//i.test(u)) { st.log.unshift('Use an https:// link.'); return render(); } if (!send({ type: 'install_request', id: 'in' + Date.now().toString(36), url: u })) st.log.unshift('Not sent: bridge offline.'); else st.log.unshift('Researching ' + u + ' ...'); inp.value = ''; render(); });
         body.appendChild(f); st.log.slice(0, 6).forEach(function (l) { body.appendChild(mk('div', l, 'margin-top:8px;color:#9fb0bb;font-size:13px')); });
+      } else if (tab === 'video') {
+        body.appendChild(mk('p', 'Analyze a local video or a YouTube URL. The bridge sends sampled frames to your configured AI provider. Answers should cite the timestamp of each frame; unsampled moments cannot be verified.', 'margin:0 0 10px;color:#9fb0bb'));
+        offline(body);
+        var videoForm = mk('form', null, 'display:flex;flex-direction:column;gap:8px');
+        var urlInput = mk('input', null, 'min-height:42px;border-radius:8px;border:1px solid #3a4651;background:#0d1216;color:#dfe7ec;padding:0 10px;font:14px sans-serif');
+        urlInput.type = 'url'; urlInput.placeholder = 'YouTube URL (optional if you choose a file)'; urlInput.value = videoUrl;
+        var fileInput = mk('input', null, 'color:#cfd8df'); fileInput.type = 'file'; fileInput.accept = '.mp4,.mov,.webm,video/mp4,video/quicktime,video/webm';
+        var questionInput = mk('textarea', null, 'min-height:68px;border-radius:8px;border:1px solid #3a4651;background:#0d1216;color:#dfe7ec;padding:10px;font:14px sans-serif;resize:vertical');
+        questionInput.maxLength = 1000; questionInput.placeholder = 'What would you like to know?'; questionInput.value = videoQuestion;
+        var permissionRow = mk('label', null, 'display:flex;gap:8px;align-items:flex-start;color:#cfd8df;font-size:13px');
+        var permissionInput = mk('input'); permissionInput.type = 'checkbox'; permissionInput.checked = videoPermission;
+        permissionRow.appendChild(permissionInput); permissionRow.appendChild(document.createTextNode('I have permission to download/process this YouTube video. Required for YouTube; local uploads do not need this.'));
+        var analyzeButton = button(videoBusy ? 'Analyzing…' : 'Analyze video', function () {});
+        analyzeButton.type = 'submit'; analyzeButton.disabled = videoBusy;
+        videoForm.appendChild(urlInput); videoForm.appendChild(fileInput); videoForm.appendChild(questionInput); videoForm.appendChild(permissionRow); videoForm.appendChild(analyzeButton);
+        videoForm.addEventListener('submit', async function (event) {
+          event.preventDefault();
+          videoUrl = urlInput.value.trim(); videoQuestion = questionInput.value.trim(); videoPermission = permissionInput.checked;
+          videoFile = fileInput.files && fileInput.files[0] || null;
+          if (!videoFile && !videoUrl) { videoMessage = 'Choose a video file or enter a YouTube URL.'; render(); return; }
+          if (videoFile && videoFile.size > 150 * 1024 * 1024) { videoMessage = 'Video uploads must be 150 MB or smaller.'; render(); return; }
+          if (!st.online) { videoMessage = 'Connect the API bridge before analyzing a video.'; render(); return; }
+          videoBusy = true; videoMessage = videoFile ? 'Uploading and sampling frames…' : 'Fetching permitted video frames…'; videoResult = null; render();
+          try {
+            var endpoint = window.__bridgeHttpEndpoint && window.__bridgeHttpEndpoint('/video');
+            if (!endpoint) throw new Error('Could not determine the local video endpoint. Reconnect the bridge.');
+            var target = new URL(endpoint);
+            target.searchParams.set('question', videoQuestion);
+            var requestOptions = { method: 'POST', mode: 'cors' };
+            if (videoFile) {
+              target.searchParams.set('upload', '1');
+              target.searchParams.set('name', videoFile.name);
+              requestOptions.headers = { 'Content-Type': 'text/plain' };
+              requestOptions.body = videoFile;
+            } else {
+              target.searchParams.set('source', videoUrl);
+              target.searchParams.set('allowYouTubeDownload', videoPermission ? 'true' : 'false');
+            }
+            var response = await fetch(target.href, requestOptions);
+            var payload = await response.json();
+            if (!response.ok || !payload.ok) throw new Error(payload.error || 'Video analysis failed (HTTP ' + response.status + ').');
+            videoResult = payload;
+            videoMessage = 'Analysis complete · ' + payload.durationFormatted + ' · ' + payload.frameCount + ' timestamped frames';
+            videoHistory.unshift({ name: payload.name || videoUrl || (videoFile && videoFile.name) || 'Video', question: videoQuestion, answer: payload.answer, duration: payload.durationFormatted, at: Date.now() });
+            videoHistory = videoHistory.slice(0, 20);
+            try { localStorage.setItem('cf.video.history', JSON.stringify(videoHistory)); } catch (storageError) { console.warn('Could not save video history:', storageError); }
+          } catch (error) {
+            videoMessage = 'Could not analyze video: ' + error.message;
+          } finally {
+            videoBusy = false; videoFile = null; render();
+          }
+        });
+        body.appendChild(videoForm);
+        if (videoMessage) body.appendChild(mk('p', videoMessage, 'white-space:pre-wrap;color:' + (videoResult ? '#8ed48f' : '#e8ab5d')));
+        if (videoResult) {
+          body.appendChild(mk('div', videoResult.name + ' · ' + videoResult.durationFormatted + ' · ' + videoResult.frameCount + ' frames', 'font-weight:700;margin:8px 0 4px'));
+          body.appendChild(mk('div', videoResult.answer || '', 'white-space:pre-wrap;color:#dfe7ec;font-size:13px'));
+        }
+        if (videoHistory.length) {
+          body.appendChild(mk('div', 'Recent analyses', 'font-weight:700;margin-top:12px'));
+          videoHistory.slice(0, 8).forEach(function (item) {
+            var historyCard = mk('details', null, 'border-bottom:1px solid #26313a;padding:8px 0');
+            historyCard.appendChild(mk('summary', item.name + ' · ' + item.duration, 'cursor:pointer;color:#cfd8df'));
+            historyCard.appendChild(mk('div', item.answer || '', 'white-space:pre-wrap;color:#9fb0bb;font-size:13px;margin-top:6px'));
+            body.appendChild(historyCard);
+          });
+        }
       } else if (tab === 'approvals') {
         if (!st.approvals.length) body.appendChild(mk('p', 'Nothing is waiting for you.', 'color:#9fb0bb'));
         st.approvals.forEach(function (a) {
           var c = mk('div', null, 'border:1px solid #3a4651;border-radius:12px;padding:10px;margin-bottom:10px');
-          c.appendChild(mk('div', (a.kind === 'post' ? 'POST  ' : 'INSTALL  ') + (a.title || ''), 'font-weight:700;margin-bottom:6px'));
+          var approvalKind = a.kind === 'post' ? 'POST' : a.kind === 'workflow_patch' ? 'WORKFLOW PATCH' : a.kind === 'workflow_check' ? 'WORKFLOW CHECK' : 'INSTALL';
+          c.appendChild(mk('div', approvalKind + '  ' + (a.title || ''), 'font-weight:700;margin-bottom:6px'));
           c.appendChild(mk('div', a.summary || '', 'white-space:pre-wrap;margin-bottom:6px'));
           (a.risks || []).forEach(function (r) { c.appendChild(mk('div', '⚠ ' + r, 'color:#e8ab5d;font-size:13px')); });
           (a.details || []).forEach(function (d) { c.appendChild(mk('div', d, 'font:12px ui-monospace,monospace;color:#9fb0bb;word-break:break-all')); });
@@ -3187,8 +3371,25 @@
         case 'approval': st.approvals = st.approvals.filter(function (a) { return a.id !== d.id; }); st.approvals.push(d); tab = 'approvals'; Sound.tick('chime'); break;
         case 'approval_result': st.approvals = st.approvals.filter(function (a) { return a.id !== d.id; }); st.log.unshift(String(d.text || (d.ok ? 'Done.' : 'Declined.')).slice(0, 300)); break;
         case 'install_status': st.log.unshift(String(d.text || '').slice(0, 300)); break;
-        case 'history': st.jobs = (d.jobs || []).slice(-60); st.approvals = d.approvals || st.approvals; break;
+        case 'history':
+          st.jobs = (d.jobs || []).slice(-60);
+          st.approvals = d.approvals || st.approvals;
+          (d.workflows || []).forEach(function (workflow) { if (window.__workflowUpdate) window.__workflowUpdate(workflow); });
+          break;
         case 'job': st.jobs.push(d.job); st.jobs = st.jobs.slice(-60); break;
+        case 'workflow_status':
+          if (window.__workflowUpdate) window.__workflowUpdate(d);
+          if (d.conv === 'ceo' && window.__ceoSay) window.__ceoSay('Workflow ' + String(d.stage || 'progress') + ': ' + String(d.message || ''));
+          return true;
+        case 'workflow_result':
+          if (!d.ok && window.__workflowUpdate) window.__workflowUpdate({
+            id: String(d.id || 'workflow'),
+            status: 'failed',
+            stage: 'failed',
+            message: String(d.text || 'The workflow failed.')
+          });
+          if (d.conv === 'ceo' && window.__ceoSay) window.__ceoSay(String(d.text || 'The workflow returned no report.'));
+          return true;
         case 'social_status': st.status = d; break;
         case 'social_report': SocialCo.done(d.id, !!d.ok, String(d.text || '')); return true;
         case 'preview': if (window.__preview) window.__preview.set(d, !!d.restore); return true;
@@ -3198,6 +3399,7 @@
       return true;
     }
     window.__bridgeMsg = handle;
+    window.__openWorkflowApprovals = function () { open = true; tab = 'approvals'; pan.hidden = false; render(); };
     window.__bridgeState = function (online) { var was = st.online; st.online = online; if (online && !was) { send({ type: 'hello' }); send({ type: 'social_status' }); } if (open) render(); };
     return { handle: handle, state: st, render: render };
   })();

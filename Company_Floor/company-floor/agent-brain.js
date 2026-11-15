@@ -316,15 +316,19 @@
           /\b(people|agents|employees|staff|team|directory|everyone|names)\b/i.test(raw) &&
           !/\bhow many\b/i.test(raw)) {
         return 'Here is the staff directory:\n' + people.map(function (p) {
-          return p.name + ' — ' + p.role + ', ' + p.office + (p.company === 'Social Media Co.' ? ' (Social Media Co.)' : '');
+          return p.name + ' — ' + p.role + ', ' + p.office + (p.company && p.company !== 'Company Floor' ? ' (' + p.company + ')' : '');
         }).join('\n');
       }
       if (/\b(who|which office|which team|who handles|who is responsible)\b/i.test(raw) && o.n) return brain.offices[o.idx].name + ' handles that. ' + (headOf(people, o.idx) || { name: 'The head' }).name + ' leads it. ' + brain.offices[o.idx].mission + ' Want me to start it as a project?';
       if (/\b(how many|offices|people|agents|employees|staff|team|who works)\b/i.test(raw)) {
         var socialCount = people.filter(function (p) { return p.company === 'Social Media Co.'; }).length;
-        var companyCount = people.length - socialCount;
+        var videoCount = people.filter(function (p) { return p.company === 'Video Studio Co.'; }).length;
+        var companyCount = people.length - socialCount - videoCount;
+        var extra = [];
+        if (socialCount) extra.push(socialCount + ' in Social Media Co.');
+        if (videoCount) extra.push(videoCount + ' in Video Studio Co.');
         return 'I know the staff directory: ' + companyCount + ' people in Company Floor' +
-          (socialCount ? ' and ' + socialCount + ' in Social Media Co. (' + people.length + ' total)' : '') +
+          (extra.length ? ' and ' + extra.join(', ') + ' (' + people.length + ' total)' : '') +
           ', across ' + brain.offices.length + ' offices. ' + busy + '.';
       }
       return (o.n ? 'That sits with ' + brain.offices[o.idx].name + '. ' : '') + 'I can answer the part I know, but I will not guess about work I have not seen. If you want it done or checked, tell me and I will call the heads.';
