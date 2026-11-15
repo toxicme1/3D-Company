@@ -1874,10 +1874,10 @@
     'I will write the scope and priorities', 'I will document it as we go', 'I will estimate the cost and set limits', 'I will run the final review and sign off'];
   var PHASE = { gather: 'Calling the office heads...', meeting: 'Heads are walking to the meeting room', discuss: 'Heads are discussing the plan', dispersing: 'Meeting is wrapping up',
     briefing: 'Heads are preparing simulated proposals', approval: 'The CEO sent you one plan. Reply in the CEO chat', working: 'Simulating team work' };
-  var project = null, projQueue = [], projEl, officeVisit = null;
+  var project = null, projQueue = [], projEl, workflowEl, workflowState = null, officeVisit = null;
   (function () {
     var st = document.createElement('style');
-    st.textContent = '.task{display:flex;gap:6px;margin-top:8px}.task input{flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--chip);color:var(--fg);font:400 .8125rem var(--f-body)}.task .chip{flex:none}.proj{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--chip);font:400 .72rem/1.35 var(--f-mono);color:var(--muted)}.proj b{color:var(--fg);font:600 .8rem/1.3 var(--f-body)}.proj .ph{color:var(--accent)}';
+    st.textContent = '.task{display:flex;gap:6px;margin-top:8px}.task input{flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--chip);color:var(--fg);font:400 .8125rem var(--f-body)}.task .chip{flex:none}.proj{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--chip);font:400 .72rem/1.35 var(--f-mono);color:var(--muted)}.proj b{color:var(--fg);font:600 .8rem/1.3 var(--f-body)}.proj .ph{color:var(--accent)}.proj.real{border:1px solid #287b82;background:rgba(20,105,112,.14)}.proj.real .ph{color:#55c7c1}';
     document.head.appendChild(st);
   })();
   function clip(str, n) { str = String(str); return str.length > n ? str.slice(0, n - 3) + '...' : str; }
@@ -1885,18 +1885,61 @@
   function plog(A, text) { if (window.__feedLog) window.__feedLog(A, text); }
   function ceoMsg(text) { if (window.__ceoSay) window.__ceoSay(text); }
   function updateProjUI() {
-    if (!projEl) return;
-    if (!project && !projQueue.length) { projEl.hidden = true; return; }
-    projEl.hidden = false; projEl.innerHTML = '';
-    if (project) {
-      projEl.appendChild(el('b', '', clip(project.task, 70)));
-      projEl.appendChild(el('span', 'ph', PHASE[project.phase]));
-      var all = (project.heads || []).concat(project.absent || []);
-      if (project.phase !== 'gather' && project.phase !== 'meeting') all.forEach(function (H) { projEl.appendChild(el('span', '', (H.proposal ? '[x] ' : '[ ] ') + H.office + ': ' + (project.approval === 'approved' ? 'started' : H.proposal ? 'proposal sent to the CEO' : 'preparing'))); });
-      if (project.phase === 'approval' && project.approval !== 'approved') { var ab = el('button', 'chip', 'Approve plan'); ab.type = 'button'; ab.addEventListener('click', approveAll); projEl.appendChild(ab); }
+    if (projEl) {
+      projEl.hidden = !project && !projQueue.length;
+      if (!projEl.hidden) {
+        projEl.innerHTML = '';
+        if (project) {
+          projEl.appendChild(el('b', '', clip(project.task, 70)));
+          projEl.appendChild(el('span', 'ph', PHASE[project.phase]));
+          var all = (project.heads || []).concat(project.absent || []);
+          if (project.phase !== 'gather' && project.phase !== 'meeting') all.forEach(function (H) { projEl.appendChild(el('span', '', (H.proposal ? '[x] ' : '[ ] ') + H.office + ': ' + (project.approval === 'approved' ? 'started' : H.proposal ? 'proposal sent to the CEO' : 'preparing'))); });
+          if (project.phase === 'approval' && project.approval !== 'approved') { var ab = el('button', 'chip', 'Approve plan'); ab.type = 'button'; ab.addEventListener('click', approveAll); projEl.appendChild(ab); }
+        }
+        if (projQueue.length) projEl.appendChild(el('span', '', projQueue.length + ' more task' + (projQueue.length > 1 ? 's' : '') + ' queued'));
+      }
     }
-    if (projQueue.length) projEl.appendChild(el('span', '', projQueue.length + ' more task' + (projQueue.length > 1 ? 's' : '') + ' queued'));
+    if (workflowEl) {
+      workflowEl.hidden = !workflowState;
+      if (workflowState) {
+        workflowEl.innerHTML = '';
+        var stateLabel = {
+          running: 'Running',
+          waiting_for_approval: 'Waiting for your approval',
+          completed: 'Completed',
+          failed: 'Failed'
+        }[workflowState.status] || 'Starting';
+        var stageLabel = String(workflowState.stage || 'starting').replace(/_/g, ' ');
+        workflowEl.appendChild(el('b', '', 'REAL WORKFLOW · ' + stateLabel));
+        workflowEl.appendChild(el('span', 'ph', stageLabel + (workflowState.activeAgent ? ' · ' + workflowState.activeAgent : '')));
+        workflowEl.appendChild(el('span', '', clip(workflowState.task || '', 100)));
+        workflowEl.appendChild(el('span', '', clip(workflowState.message || '', 180)));
+        if (workflowState.status === 'waiting_for_approval') {
+          var approvalButton = el('button', 'chip', 'Review approval in Tools');
+          approvalButton.type = 'button';
+          approvalButton.addEventListener('click', function () {
+            if (window.__openWorkflowApprovals) window.__openWorkflowApprovals();
+          });
+          workflowEl.appendChild(approvalButton);
+        }
+      }
+    }
   }
+  window.__workflowUpdate = function (state) {
+    if (!state || typeof state !== 'object' || typeof state.id !== 'string') return;
+    if (workflowState && Number(state.updatedAt || 0) < Number(workflowState.updatedAt || 0)) return;
+    workflowState = {
+      id: state.id,
+      task: String(state.task || ''),
+      status: String(state.status || 'running'),
+      stage: String(state.stage || 'starting'),
+      activeAgent: String(state.activeAgent || ''),
+      approvalId: String(state.approvalId || ''),
+      message: String(state.message || ''),
+      updatedAt: Number(state.updatedAt || Date.now())
+    };
+    updateProjUI();
+  };
   function assignTask(text) {
     text = String(text || '').trim(); if (!text || !ceoA) return { ok: false, reply: '' };
     if (meeting && !meeting.project) { meeting.members.forEach(function (A) { if (A.mode === 'seated') A.timer = 0.01; }); meeting = null; }
@@ -2302,7 +2345,8 @@
     var tgp = el('div', 'group'); tgp.appendChild(el('span', 'lab', 'Task for the CEO'));
     var tfm = el('form', 'task'), tin = el('input'), tbt = el('button', 'chip', 'Assign');
     tin.placeholder = 'e.g. Build the login page'; tin.maxLength = 140; tin.setAttribute('aria-label', 'Task for the CEO'); tbt.type = 'submit';
-    tfm.appendChild(tin); tfm.appendChild(tbt); projEl = el('div', 'proj'); projEl.hidden = true; tgp.appendChild(tfm); tgp.appendChild(projEl);
+    tfm.appendChild(tin); tfm.appendChild(tbt); projEl = el('div', 'proj'); projEl.hidden = true;
+    workflowEl = el('div', 'proj real'); workflowEl.hidden = true; tgp.appendChild(tfm); tgp.appendChild(projEl); tgp.appendChild(workflowEl); updateProjUI();
     tfm.addEventListener('submit', function (e) {
       e.preventDefault(); var v = tin.value.trim(); if (!v) return; tin.value = '';
       var r = assignTask(v); if (window.__ceoHear) { window.__ceoHear(v); setTimeout(function () { if (r.reply) window.__ceoSay(r.reply); }, 900); }
@@ -2676,6 +2720,24 @@
     };
     function dispatch(id, m) {
       if (m.text && window.__social && window.__social.route(id, m)) return;
+      if (id === 'ceo' && m.text && /^\/workflow(?:\s|$)/i.test(m.text)) {
+        var workflowTask = m.text.replace(/^\/workflow\s*/i, '').trim();
+        if (!workflowTask) {
+          deliver(id, 'ceo', 'Add a task after /workflow, for example: /workflow review the login flow and suggest improvements.', false);
+          return;
+        }
+        if (!window.__bridgeOnline || !window.__bridgeOnline()) {
+          deliver(id, 'ceo', 'A real agent workflow needs the API bridge. Connect it first, then send /workflow followed by your task. No work was started.', false);
+          return;
+        }
+        var workflowId = uid();
+        if (!window.__bridgeSend({ type: 'workflow', id: workflowId, conv: 'ceo', task: workflowTask })) {
+          deliver(id, 'ceo', 'I could not send the workflow to the API bridge. Check the connection and try again. No work was started.', false);
+          return;
+        }
+        deliver(id, 'ceo', 'Starting the real agent workflow for: "' + clip(workflowTask, 100) + '". I will report each handoff here.', false);
+        return;
+      }
       if (id === 'ceo' && m.text) {
         var target = CompanyBrain.parseSummonCommand(m.text);
         if (target) {
@@ -3152,7 +3214,8 @@
         if (!st.approvals.length) body.appendChild(mk('p', 'Nothing is waiting for you.', 'color:#9fb0bb'));
         st.approvals.forEach(function (a) {
           var c = mk('div', null, 'border:1px solid #3a4651;border-radius:12px;padding:10px;margin-bottom:10px');
-          c.appendChild(mk('div', (a.kind === 'post' ? 'POST  ' : 'INSTALL  ') + (a.title || ''), 'font-weight:700;margin-bottom:6px'));
+          var approvalKind = a.kind === 'post' ? 'POST' : a.kind === 'workflow_patch' ? 'WORKFLOW PATCH' : a.kind === 'workflow_check' ? 'WORKFLOW CHECK' : 'INSTALL';
+          c.appendChild(mk('div', approvalKind + '  ' + (a.title || ''), 'font-weight:700;margin-bottom:6px'));
           c.appendChild(mk('div', a.summary || '', 'white-space:pre-wrap;margin-bottom:6px'));
           (a.risks || []).forEach(function (r) { c.appendChild(mk('div', '⚠ ' + r, 'color:#e8ab5d;font-size:13px')); });
           (a.details || []).forEach(function (d) { c.appendChild(mk('div', d, 'font:12px ui-monospace,monospace;color:#9fb0bb;word-break:break-all')); });
@@ -3187,8 +3250,25 @@
         case 'approval': st.approvals = st.approvals.filter(function (a) { return a.id !== d.id; }); st.approvals.push(d); tab = 'approvals'; Sound.tick('chime'); break;
         case 'approval_result': st.approvals = st.approvals.filter(function (a) { return a.id !== d.id; }); st.log.unshift(String(d.text || (d.ok ? 'Done.' : 'Declined.')).slice(0, 300)); break;
         case 'install_status': st.log.unshift(String(d.text || '').slice(0, 300)); break;
-        case 'history': st.jobs = (d.jobs || []).slice(-60); st.approvals = d.approvals || st.approvals; break;
+        case 'history':
+          st.jobs = (d.jobs || []).slice(-60);
+          st.approvals = d.approvals || st.approvals;
+          (d.workflows || []).forEach(function (workflow) { if (window.__workflowUpdate) window.__workflowUpdate(workflow); });
+          break;
         case 'job': st.jobs.push(d.job); st.jobs = st.jobs.slice(-60); break;
+        case 'workflow_status':
+          if (window.__workflowUpdate) window.__workflowUpdate(d);
+          if (d.conv === 'ceo' && window.__ceoSay) window.__ceoSay('Workflow ' + String(d.stage || 'progress') + ': ' + String(d.message || ''));
+          return true;
+        case 'workflow_result':
+          if (!d.ok && window.__workflowUpdate) window.__workflowUpdate({
+            id: String(d.id || 'workflow'),
+            status: 'failed',
+            stage: 'failed',
+            message: String(d.text || 'The workflow failed.')
+          });
+          if (d.conv === 'ceo' && window.__ceoSay) window.__ceoSay(String(d.text || 'The workflow returned no report.'));
+          return true;
         case 'social_status': st.status = d; break;
         case 'social_report': SocialCo.done(d.id, !!d.ok, String(d.text || '')); return true;
         case 'preview': if (window.__preview) window.__preview.set(d, !!d.restore); return true;
@@ -3198,6 +3278,7 @@
       return true;
     }
     window.__bridgeMsg = handle;
+    window.__openWorkflowApprovals = function () { open = true; tab = 'approvals'; pan.hidden = false; render(); };
     window.__bridgeState = function (online) { var was = st.online; st.online = online; if (online && !was) { send({ type: 'hello' }); send({ type: 'social_status' }); } if (open) render(); };
     return { handle: handle, state: st, render: render };
   })();

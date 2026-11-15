@@ -1,7 +1,9 @@
 setting.json
 .env
+.env.*
 social-proxy.env
 youtube-token.json
 instagram-token.json
 tiktok-token.json
 uploads/
+*.tmp

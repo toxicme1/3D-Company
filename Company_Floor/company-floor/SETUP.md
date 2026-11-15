@@ -59,7 +59,7 @@ For OmniRoute or another provider, enter its OpenAI-compatible API base URL and 
 
 The launcher starts the API bridge and opens the page with its local connection prefilled. Keep the terminal open while using the app; press Ctrl+C to stop the bridge.
 
-The bridge sends chat prompts and role-profile text to the configured provider. The API model cannot run commands or edit files. The 3D meetings and office work are simulations; approval controls that simulation, not API requests already sent from chat.
+Ordinary chat sends prompts and role-profile text to the configured provider. The `/workflow <task>` command can inspect eligible workspace text files, but only when the configured OpenAI-compatible provider is on localhost or loopback and supports tool calls. The bridge blocks provider redirects, but a local proxy may independently forward requests; configure it accordingly. Proposed single-file patches and each fixed test/build check wait for approval in Tools > Approvals. Test/build code executes with your local user's permissions, so review each request before approving it. Use `node api-bridge.js --workspace /path/to/repository` when starting the bridge directly to choose a different workspace root. The 3D meetings and office animations remain simulations.
 
 ## 4. Optional: Social Media Co.
 1. Copy `social-proxy.env.example` to `.env` next to `social-proxy.js` and fill in credentials for the platforms you use.

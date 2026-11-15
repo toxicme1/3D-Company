@@ -5,6 +5,11 @@
   "bin": {
     "3DCOMPANY": "Company_Floor/company-floor/3DCOMPANY.js"
   },
+  "scripts": {
+    "test": "node --test Company_Floor/company-floor/*.test.js",
+    "start": "node Company_Floor/company-floor/3DCOMPANY.js",
+    "build": "node Company_Floor/company-floor/build.js"
+  },
   "engines": {
     "node": ">=18"
   }

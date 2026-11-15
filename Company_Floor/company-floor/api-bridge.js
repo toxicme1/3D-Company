@@ -1,10 +1,23 @@
 #!/usr/bin/env node
 // Local OpenAI-compatible API bridge for the Company Floor (Node 18+, no dependencies).
-// Configure provider credentials in setting.json. This bridge sends prompts to the configured model;
-// it does not run shell commands or grant the model access to local files.
+// Configure provider credentials in setting.json. Workspace tools are limited to local-provider workflows.
 const http = require('http'), https = require('https'), crypto = require('crypto'), fs = require('fs'), path = require('path'), dns = require('dns'), net = require('net');
+const { runWorkflow } = require('./agent-workflow');
+const { WorkspaceTools } = require('./workspace-tools');
+const { WorkflowStore } = require('./workflow-store');
+const { WorkflowApprovalQueue } = require('./workflow-approvals');
+const { runWorkflowToolLoop } = require('./workflow-tool-loop');
+const AGENT_MAP = require('./agent-map.json');
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 && process.argv[i + 1] ? process.argv[i + 1] : d; };
 const DIR = path.resolve(arg('dir', path.resolve(__dirname, '../Workspace'))), PORT = +arg('port', 8787), TOKEN = arg('token', crypto.randomBytes(12).toString('hex'));
+const defaultWorkspaceRoot = (() => {
+  const twoUp = path.resolve(__dirname, '../..');
+  const oneUp = path.resolve(__dirname, '..');
+  if (fs.existsSync(path.join(twoUp, 'package.json')) || fs.existsSync(path.join(twoUp, '.git'))) return twoUp;
+  if (fs.existsSync(path.join(oneUp, 'package.json')) || fs.existsSync(path.join(oneUp, 'Workspace'))) return oneUp;
+  return twoUp;
+})();
+const WORKSPACE_ROOT = path.resolve(arg('workspace', defaultWorkspaceRoot));
 const PROXY = arg('proxy', 'http://127.0.0.1:4000'), PROXY_KEY = process.env.SOCIAL_PROXY_KEY || '';
 const PREVIEW = path.join(DIR, '.preview'), OS = path.join(DIR, '.os'), OUTBOX = path.join(DIR, 'social', 'outbox');
 if (!fs.existsSync(DIR)) { console.error('Folder not found: ' + DIR); process.exit(1); }
@@ -26,7 +39,7 @@ if (!SETTINGS || typeof SETTINGS !== 'object' || typeof SETTINGS.apiKey !== 'str
 let API_URL;
 try {
   const base = new URL(SETTINGS.baseUrl);
-  if ((base.protocol !== 'https:' && !(base.protocol === 'http:' && ['localhost', '127.0.0.1', '::1'].includes(base.hostname))) ||
+  if ((base.protocol !== 'https:' && !(base.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(base.hostname))) ||
       base.username || base.password || base.search || base.hash) throw new Error('Use HTTPS, except for a local API server.');
   API_URL = base.href.replace(/\/+$/, '') + '/chat/completions';
 } catch (e) {
@@ -35,22 +48,95 @@ try {
 }
 const API_TIMEOUT = Math.max(10000, Math.min(Number(SETTINGS.timeoutMs) || 120000, 600000));
 const API_KEY = SETTINGS.apiKey.trim();
+const LOCAL_PROVIDER = ['localhost', '127.0.0.1', '[::1]'].includes(new URL(API_URL).hostname);
+const WORKFLOW_PROFILES = Array.from(new Set(
+  AGENT_MAP.offices
+    .concat(Object.values(AGENT_MAP.support || {}).flat())
+    .concat(Object.values(AGENT_MAP.roles || {}))
+));
+const WORKSPACE_TOOLS = new WorkspaceTools(WORKSPACE_ROOT);
+const TOOL_DEFINITIONS = [
+  {
+    type: 'function',
+    function: {
+      name: 'list_workspace_files',
+      description: 'List readable text files under a workspace directory. Excluded files and symlinks are not listed.',
+      parameters: {
+        type: 'object',
+        properties: { path: { type: 'string', description: 'Relative directory, or omit to list the workspace.' } },
+        additionalProperties: false
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'read_workspace_file',
+      description: 'Read one allowed text file under the workspace.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string' },
+          startLine: { type: 'integer', minimum: 1 },
+          lineCount: { type: 'integer', minimum: 1, maximum: 300 }
+        },
+        required: ['path'],
+        additionalProperties: false
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'propose_workspace_patch',
+      description: 'Propose a unified diff for exactly one existing text file. The user must approve it before it is applied.',
+      parameters: {
+        type: 'object',
+        properties: {
+          summary: { type: 'string', description: 'Short explanation shown with the approval request.' },
+          patch: { type: 'string', description: 'Single-file unified diff with diff --git, ---/+++, and hunks.' }
+        },
+        required: ['summary', 'patch'],
+        additionalProperties: false
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'run_project_check',
+      description: 'Request approval to run a fixed project check. No command or arguments are accepted from the model.',
+      parameters: { type: 'object', properties: { check: { type: 'string', enum: ['tests', 'build'] } }, required: ['check'], additionalProperties: false }
+    }
+  }
+];
 
-async function complete(messages) {
+async function complete(messages, tools) {
   const controller = new AbortController(), timer = setTimeout(() => controller.abort(), API_TIMEOUT);
   try {
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: { authorization: 'Bearer ' + API_KEY, 'content-type': 'application/json' },
-      body: JSON.stringify({ model: SETTINGS.model, messages }),
+      body: JSON.stringify({
+        model: SETTINGS.model,
+        messages,
+        ...(tools ? { tools, tool_choice: 'auto' } : {})
+      }),
+      redirect: 'error',
       signal: controller.signal
     });
     const body = await response.text();
     let data;
     try { data = JSON.parse(body); } catch (e) { throw new Error('The API returned invalid JSON (HTTP ' + response.status + ').'); }
     if (!response.ok) throw new Error('API request failed (HTTP ' + response.status + '): ' + String(data.error && data.error.message || body).slice(0, 500));
-    const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    const message = data.choices && data.choices[0] && data.choices[0].message;
+    const content = message && message.content;
     const text = typeof content === 'string' ? content : Array.isArray(content) ? content.filter(x => x && x.type === 'text').map(x => x.text || '').join('\n') : '';
+    const toolCalls = message && Array.isArray(message.tool_calls) ? message.tool_calls : [];
+    if (tools) {
+      if (!text.trim() && !toolCalls.length) throw new Error('The API returned neither text nor supported tool calls.');
+      return { text: text.trim(), toolCalls };
+    }
     if (!text.trim()) throw new Error('The API response did not contain text.');
     return text.trim();
   } catch (e) {
@@ -63,9 +149,68 @@ const writeJson = (f, v) => { const t = f + '.tmp'; fs.writeFileSync(t, JSON.str
 
 // ---------- persistence: job history, previews, pending approvals ----------
 const JOBS = path.join(OS, 'jobs.jsonl'), APPR = path.join(OS, 'approvals.json'), PREV = path.join(OS, 'previews.json');
+const WORKFLOWS = path.join(OS, 'workflows.json');
+const workflowStore = new WorkflowStore(WORKFLOWS);
 function logJob(j) { j.ts = Date.now(); try { fs.appendFileSync(JOBS, JSON.stringify(j) + '\n'); } catch (e) {} return j; }
 function recentJobs(n) { try { return fs.readFileSync(JOBS, 'utf8').trim().split('\n').slice(-n).map(l => JSON.parse(l)); } catch (e) { return []; } }
 let approvals = readJson(APPR, {}); const saveAppr = () => writeJson(APPR, approvals);
+const pendingWorkflowApprovals = new WorkflowApprovalQueue();
+let staleApprovalsRemoved = false;
+Object.values(approvals).forEach(rec => {
+  if (rec && (rec.kind === 'workflow_patch' || rec.kind === 'workflow_check')) {
+    delete approvals[rec.id];
+    staleApprovalsRemoved = true;
+  }
+});
+if (staleApprovalsRemoved) saveAppr();
+function updateWorkflowState(id, conv, update, send) {
+  const state = workflowStore.update(id, conv, update);
+  if (send) send(Object.assign({ type: 'workflow_status' }, state));
+  return state;
+}
+function requestWorkflowApproval(options) {
+  const approvalId = 'wfap-' + crypto.randomBytes(8).toString('hex');
+  const record = Object.assign({
+    id: approvalId,
+    type: 'approval',
+    kind: options.kind,
+    title: options.title,
+    summary: options.summary,
+    risks: options.risks,
+    details: options.details,
+    payload: Object.assign({ workflowId: options.workflowId }, options.payload)
+  });
+  const result = pendingWorkflowApprovals.wait(approvalId, { record, options }, () => {
+    delete approvals[approvalId];
+    saveAppr();
+    updateWorkflowState(options.workflowId, options.conv, {
+      status: 'running',
+      stage: options.resumeStage,
+      activeAgent: options.agent,
+      approvalId: '',
+      message: 'Approval expired; the requested action was not performed.'
+    }, options.send);
+  });
+  try {
+    approvals[approvalId] = record;
+    saveAppr();
+    updateWorkflowState(options.workflowId, options.conv, {
+      status: 'waiting_for_approval',
+      stage: 'waiting_for_approval',
+      activeAgent: options.agent,
+      approvalId,
+      message: options.summary
+    }, options.send);
+    options.send(record);
+  } catch (error) {
+    pendingWorkflowApprovals.cancel(approvalId, error);
+    result.catch(() => {});
+    delete approvals[approvalId];
+    try { saveAppr(); } catch (saveError) { error.message += ' Approval cleanup failed: ' + saveError.message; }
+    throw error;
+  }
+  return result;
+}
 
 // ---------- safe fetch: https only, public addresses only, redirects re-checked, size capped ----------
 function isPrivate(ip) {
@@ -140,6 +285,199 @@ async function askAgent(agent, text, system) {
     { role: 'system', content: (system || 'Follow the role profile and answer honestly. Do not invent facts or claim work you did not do.') + (instructions ? '\n\nRole profile:\n' + instructions : '') },
     { role: 'user', content: String(text || '').slice(0, 8000) }
   ]);
+}
+async function runWorkflowTool(agent, name, args, context) {
+  try {
+    if (!args || typeof args !== 'object' || Array.isArray(args)) {
+      throw new Error('Workspace tool arguments must be a JSON object.');
+    }
+    const status = (stage, message) => context.updateStatus({
+      status: 'running',
+      stage,
+      activeAgent: agent,
+      approvalId: '',
+      message
+    });
+    const allowedArgs = {
+      list_workspace_files: ['path'],
+      read_workspace_file: ['path', 'startLine', 'lineCount'],
+      propose_workspace_patch: ['summary', 'patch'],
+      run_project_check: ['check']
+    }[name];
+    if (!allowedArgs) throw new Error('Unknown workspace tool: ' + name);
+    if (Object.keys(args).some(key => !allowedArgs.includes(key))) throw new Error('Tool call included unsupported arguments.');
+    if (name === 'list_workspace_files') {
+      if (args.path !== undefined && typeof args.path !== 'string') throw new Error('Workspace directory must be a relative path.');
+      status('reading', agent + ' is listing workspace text files.');
+      const files = WORKSPACE_TOOLS.listFiles(args.path);
+      context.recordEvidence({ type: 'file_list', path: args.path || '.', files });
+      return { files };
+    }
+    if (name === 'read_workspace_file') {
+      if (typeof args.path !== 'string' ||
+          (args.startLine !== undefined && (!Number.isInteger(args.startLine) || args.startLine < 1)) ||
+          (args.lineCount !== undefined && (!Number.isInteger(args.lineCount) || args.lineCount < 1 || args.lineCount > 300))) {
+        throw new Error('File path and optional line range are invalid.');
+      }
+      status('reading', agent + ' is reading ' + String(args.path || '') + '.');
+      const file = WORKSPACE_TOOLS.readFile(args.path, args.startLine, args.lineCount);
+      context.recordEvidence({
+        type: 'file_read',
+        path: file.path,
+        startLine: file.startLine,
+        totalLines: file.totalLines,
+        sha256: file.sha256
+      });
+      return file;
+    }
+    if (name === 'propose_workspace_patch') {
+      if (['orchestrator', 'test-engineer', 'approvals-reviewer'].includes(agent)) {
+        throw new Error('This role cannot propose repository edits.');
+      }
+      if (typeof args.summary !== 'string' || !args.summary.trim() || args.summary.length > 500 || typeof args.patch !== 'string') {
+        throw new Error('Patch summary must be 1 to 500 characters.');
+      }
+      const prepared = WORKSPACE_TOOLS.preparePatch(args.patch);
+      const approval = await context.requestApproval({
+        workflowId: context.workflowId,
+        conv: context.conv,
+        send: context.send,
+        agent,
+        kind: 'workflow_patch',
+        resumeStage: 'specialist',
+        title: 'Patch: ' + prepared.path,
+        summary: args.summary.trim(),
+        risks: ['This exact single-file patch will be applied only after approval.'],
+        details: ['Workspace file: ' + prepared.path, 'SHA-256 before: ' + prepared.beforeHash, 'Proposed diff:', prepared.patch],
+        payload: {
+          action: 'patch',
+          path: prepared.path,
+          patch: prepared.patch,
+          beforeHash: prepared.beforeHash,
+          patchHash: prepared.patchHash
+        }
+      });
+      if (!approval.approved) {
+        const message = approval.reason || 'The patch was declined; it was not applied.';
+        context.recordEvidence({ type: 'patch_declined', path: prepared.path, reason: message });
+        return { approved: false, message };
+      }
+      const applied = WORKSPACE_TOOLS.applyPatch(prepared);
+      context.recordEvidence(Object.assign({ type: 'patch_applied' }, applied));
+      status('specialist', agent + ' applied the approved patch to ' + applied.path + '.');
+      return { approved: true, ...applied };
+    }
+    if (name === 'run_project_check') {
+      if (agent !== 'test-engineer') throw new Error('Only QA may request project checks.');
+      if (typeof args.check !== 'string') throw new Error('Check must be tests or build.');
+      const check = args.check;
+      const command = WORKSPACE_TOOLS.checkCommand(check);
+      const approval = await context.requestApproval({
+        workflowId: context.workflowId,
+        conv: context.conv,
+        send: context.send,
+        agent,
+        kind: 'workflow_check',
+        resumeStage: 'qa',
+        title: 'Run project ' + check,
+        summary: 'QA requests approval to run the fixed check: ' + command.command,
+        risks: ['This runs project code inside the workspace. Review it first if you do not trust this repository.'],
+        details: ['Allowlisted check: ' + check, 'Command: ' + command.command, 'Working directory: ' + WORKSPACE_ROOT],
+        payload: { action: 'check', check }
+      });
+      if (!approval.approved) {
+        const message = approval.reason || 'The check was declined; it was not run.';
+        context.recordEvidence({ type: 'check_declined', check, reason: message });
+        return { approved: false, message };
+      }
+      status('running_check', 'QA is running the approved ' + check + ' check.');
+      const result = await WORKSPACE_TOOLS.runCheck(check);
+      context.recordEvidence(Object.assign({ type: 'check_result' }, result));
+      status('qa', 'The ' + check + ' check ' + (result.ok ? 'passed.' : 'failed.'));
+      return result;
+    }
+    throw new Error('Unknown workspace tool: ' + name);
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+    if (!approval.approved) {
+      const message = approval.reason || 'The check was declined; it was not run.';
+      context.recordEvidence({ type: 'check_declined', check, reason: message });
+      return { approved: false, message };
+    }
+    status('running_check', 'QA is running the approved ' + check + ' check.');
+    const result = await WORKSPACE_TOOLS.runCheck(check);
+    context.recordEvidence(Object.assign({ type: 'check_result' }, result));
+    status('qa', 'The ' + check + ' check ' + (result.ok ? 'passed.' : 'failed.'));
+    return result;
+  }
+  throw new Error('Unknown workspace tool: ' + name);
+}
+
+async function askWorkflowAgent(agent, text, rules, context) {
+  if (!LOCAL_PROVIDER) {
+    throw new Error('Repository tools are disabled for non-local providers so workspace code is not sent to a third party. Configure an OpenAI-compatible provider on localhost, 127.0.0.1, or [::1].');
+  }
+  const instructions = profileText(agent);
+  const messages = [
+    {
+      role: 'system',
+      content: 'You are participating in the Company Floor agent workflow. Use only the provided workspace tools for repository context, edits, and checks. No shell, network, or tools other than those provided. Be honest about unverified work.\n\nRole profile:\n' +
+        instructions + '\n\nWorkflow rules:\n' + rules
+    },
+    { role: 'user', content: String(text || '').slice(0, 24000) }
+  ];
+  return runWorkflowToolLoop({
+    agent,
+    messages,
+    toolDefinitions: TOOL_DEFINITIONS,
+    complete,
+    execute: (name, args) => runWorkflowTool(agent, name, args, context),
+    context
+  });
+}
+function workflowReport(result) {
+  const clip = (value, limit) => {
+    const text = String(value || '').trim();
+    return text.length > limit ? text.slice(0, limit - 3) + '...' : text;
+  };
+  const limitNotice = 'Review gate: advisory only. File access was restricted to the configured workspace through a local provider; this report is not merge approval.';
+  const lines = [
+    'Agent workflow report',
+    '',
+    'Plan: ' + clip(result.plan.summary, 300),
+    'Acceptance criteria: ' + result.plan.acceptanceCriteria.map(item => clip(item, 150)).join(' | ')
+  ];
+  result.handoffs.forEach(handoff => {
+    lines.push('', handoff.agent + ' handoff (' + clip(handoff.task, 120) + '): ' + clip(handoff.summary, 180), clip(handoff.deliverable, 350));
+    if (handoff.assumptions.length) lines.push('Assumptions: ' + handoff.assumptions.slice(0, 2).map(item => clip(item, 100)).join('; '));
+    if (handoff.blockers.length) lines.push('Blockers: ' + handoff.blockers.slice(0, 2).map(item => clip(item, 100)).join('; '));
+  });
+  lines.push('', 'QA verdict: ' + result.qa.verdict.replace('_', ' '));
+  result.qa.checks.forEach(check => lines.push('- ' + clip(check.criterion, 140) + ' [' + check.status + ']: ' + clip(check.evidence, 140)));
+  const changes = result.evidence.filter(item => item.type === 'patch_applied');
+  lines.push('Approved workspace changes: ' + (changes.length ? changes.map(item => item.path + ' (' + item.afterHash.slice(0, 12) + ')').join(', ') : 'none'));
+  const reads = Array.from(new Set(result.evidence.filter(item => item.type === 'file_read').map(item => item.path)));
+  lines.push('Workspace files read: ' + (reads.length ? reads.join(', ') : 'none recorded'));
+  result.evidence.filter(item => item.type === 'patch_declined' || item.type === 'check_declined')
+    .forEach(item => lines.push('Not approved: ' + (item.path || item.check) + ' — ' + item.reason));
+  const checks = result.evidence.filter(item => item.type === 'check_result');
+  if (checks.length) {
+    checks.forEach(item => {
+      lines.push('', item.command + ': ' + (item.ok ? 'passed' : 'failed') + ' (exit ' + item.exitCode + ')');
+      if (item.output) lines.push(clip(item.output, 1200));
+    });
+  } else {
+    lines.push('Project checks: none approved and run.');
+  }
+  lines.push('QA limitations: ' + clip(result.qa.limitations, 400));
+  lines.push('', 'Review & Approvals summary:', clip(result.summary, 1000));
+  lines.push('', limitNotice);
+  const report = lines.join('\n');
+  return report.length <= 8000
+    ? report
+    : report.slice(0, 7900 - limitNotice.length) + '\n\n[Report shortened to fit the chat message.]\n' + limitNotice;
 }
 function newPreviews(since, m) {
   try {
@@ -278,13 +616,110 @@ srv.on('upgrade', (req, sock) => {
   const send = o => { if (!sock.destroyed) { const c = Object.assign({}, o); delete c.payload; sock.write(frame(JSON.stringify(c))); } }, busy = {}; let buf = Buffer.alloc(0);
   sock.on('error', () => {});
   const handlers = {
-    hello() { send({ type: 'history', jobs: recentJobs(50), approvals: Object.values(approvals), provider: new URL(API_URL).hostname, model: SETTINGS.model }); storedPreviews().forEach(send); },
+    hello() {
+      send({
+        type: 'history',
+        jobs: recentJobs(50),
+        approvals: Object.values(approvals),
+        workflows: workflowStore.all(),
+        provider: new URL(API_URL).hostname,
+        model: SETTINGS.model
+      });
+      storedPreviews().forEach(send);
+    },
+    async workflow(m) {
+      const conv = String(m.conv || 'ceo'), id = String(m.id || 'wf' + Date.now());
+      const task = typeof m.task === 'string' ? m.task.trim() : '';
+      if (!task || task.length > 8000) {
+        send({ type: 'workflow_result', id, conv, ok: false, text: 'Workflow task must contain between 1 and 8000 characters.' });
+        return;
+      }
+      if (busy[conv]) {
+        send({ type: 'workflow_result', id, conv, ok: false, text: 'This chat is already handling a request. Wait for it to finish, then try /workflow again.' });
+        return;
+      }
+      if (!/^[\w.-]{1,80}$/.test(id)) {
+        send({ type: 'workflow_result', id: '', conv, ok: false, text: 'Invalid workflow ID.' });
+        return;
+      }
+      busy[conv] = true;
+      const t0 = Date.now();
+      const state = (info) => updateWorkflowState(id, conv, Object.assign({
+        task: task.slice(0, 400),
+        status: 'running',
+        activeAgent: '',
+        approvalId: ''
+      }, info), send);
+      state({ stage: 'starting', message: 'Preparing the real workflow.' });
+      try {
+        if (!LOCAL_PROVIDER) throw new Error('Repository tools are disabled for non-local providers so workspace code is not sent to a third party. Configure an OpenAI-compatible provider on localhost, 127.0.0.1, or [::1].');
+        const result = await runWorkflow({
+          workflowId: id,
+          conv,
+          send,
+          task,
+          profiles: WORKFLOW_PROFILES,
+          ask: askWorkflowAgent,
+          requestApproval: requestWorkflowApproval,
+          onStage: info => state(info)
+        });
+        const text = workflowReport(result);
+        send({ type: 'workflow_result', id, conv, ok: true, text });
+        const job = logJob({ who: 'agent workflow', ok: true, ms: Date.now() - t0, text: text.slice(0, 300) });
+        send({ type: 'job', job });
+      } catch (e) {
+        const text = 'Agent workflow failed: ' + e.message;
+        state({
+          status: 'failed',
+          stage: 'failed',
+          activeAgent: '',
+          approvalId: '',
+          message: text
+        });
+        send({ type: 'workflow_result', id, conv, ok: false, text });
+        const job = logJob({ who: 'agent workflow', ok: false, ms: Date.now() - t0, text: e.message });
+        send({ type: 'job', job });
+      } finally {
+        delete busy[conv];
+      }
+    },
     install_request(m) { if (typeof m.url === 'string') installResearch(m, send); },
     social(m) { if (m.id) socialReport(m, send); },
     social_post(m) { if (m.id) socialPost(m, send); },
     social_status() { socialStatus(send); },
     async approve(m) {
       const rec = approvals[m.id]; if (!rec) return; delete approvals[m.id]; saveAppr();
+      if (rec.kind === 'workflow_patch' || rec.kind === 'workflow_check') {
+        const pending = pendingWorkflowApprovals.get(m.id);
+        if (!pending) {
+          const text = 'This workflow is no longer active; the requested action was not applied. Start a new workflow.';
+          if (rec.payload && rec.payload.workflowId) {
+            updateWorkflowState(rec.payload.workflowId, 'ceo', {
+              status: 'failed',
+              stage: 'failed',
+              activeAgent: '',
+              approvalId: '',
+              message: text
+            }, send);
+          }
+          send({ type: 'approval_result', id: m.id, ok: false, text });
+          return;
+        }
+        const accepted = m.ok === true;
+        const text = accepted
+          ? 'Approved. The workflow will resume and perform the action.'
+          : 'Declined. The requested action was not performed.';
+        pendingWorkflowApprovals.resolve(m.id, { approved: accepted, reason: accepted ? '' : text });
+        updateWorkflowState(pending.record.payload.workflowId, pending.options.conv, {
+          status: 'running',
+          stage: pending.options.resumeStage,
+          activeAgent: pending.options.agent,
+          approvalId: '',
+          message: text
+        }, send);
+        send({ type: 'approval_result', id: m.id, ok: accepted, text });
+        return;
+      }
       if (!m.ok) { send({ type: 'approval_result', id: m.id, ok: false, text: 'Declined: ' + rec.title }); if (rec.kind === 'post') send({ type: 'social_report', id: m.id, ok: false, text: 'You declined the post, so nothing was posted.' }); return; }
       const t0 = Date.now();
       try { const text = rec.kind === 'post' ? await applyPost(rec, send) : applyInstall(rec); send({ type: 'approval_result', id: m.id, ok: true, text }); if (rec.kind === 'post') send({ type: 'social_report', id: m.id, ok: true, text }); logJob({ who: rec.kind, ok: true, ms: Date.now() - t0, text }); }

@@ -10,14 +10,18 @@ To launch with a setup wizard, install the global command once with `npm link` f
 ## API bridge
 `api-bridge.js` connects the page to OpenRouter or another OpenAI-compatible chat-completions API. The provider URL, API key, model, and timeout are configured in `setting.json` (copy `setting.example.json`). The API key remains on the local bridge and is not sent to the browser. The bridge binds to `127.0.0.1` and uses a token in its WebSocket URL.
 
-The bridge sends the latest chat message and the selected role profile to the model. It does not expose local files, run commands, or modify code. The animated meetings and office work are simulations; the plan approval only gates the simulation, not API requests already sent from chat.
+Ordinary chat sends the latest message and selected role profile to the configured provider, but does not expose project files or run commands. The `/workflow` path below is different: it uses bounded workspace tools, so it is enabled only for an OpenAI-compatible provider on localhost or loopback. The bridge blocks provider redirects; a local proxy may still independently forward requests, so configure it accordingly.
 
 ## How a task flows
 1. Give the CEO a task in chat or the task box. The browser selects relevant offices; Product & Planning, Cost & Budget, QA & Testing, and Review & Approvals are always included.
 2. The 3D scene animates a meeting. Heads use preset proposal lines, and the browser builds one plan.
 3. You can approve or revise the simulated plan. The scene animates teams working, then reports simulated completion.
 
-This project flow is a visual simulation, not a workflow engine that dispatches coding work to each office. API chat is separate and calls the configured model for a response.
+The office meeting and work animations are still a visual simulation. For a real, bounded model workflow, connect the API bridge and send `/workflow <task>` in the CEO chat. The Orchestrator creates a plan with up to three specialist handoffs, QA checks the handoffs against the plan, and Review & Approvals summarizes the result. Progress and the final report appear in the CEO chat; the run is also recorded in Tools > History.
+
+The workflow uses local role profiles and restricted tools: it can list/read eligible text files, propose a one-file patch, and ask QA to run the fixed test or Company Floor build check. File edits and every check wait for approval in Tools > Approvals; the project progress card reports the active stage, agent, approval wait, completion, or failure. Only approved patches are applied and they are rejected if the target file changed while approval was pending. Status is saved in `Workspace/.os/workflows.json` and restored when the page reconnects; interrupted workflows are marked failed rather than resumed.
+
+The workspace defaults to the app's repository directory; when starting `api-bridge.js` directly, use `--workspace <path>` to select another root. File tools reject traversal, symlinks, binary/oversized files, and credential-like paths. Checks use fixed Node commands, no shell, and a reduced environment, but approved test/build code still executes with the current user's local permissions. Review the requested check before approving it. Providers must support OpenAI-compatible tool calls; unsupported providers fail visibly rather than falling back to simulated or model-only success. The 3D meeting remains a separate simulation.
 
 ## CEO staff directory and office visits
 The CEO chat receives the live staff directory, including names, roles, and offices, so it can answer questions such as “What does Amina do?” or “List all employees and their roles.” To bring one person to the CEO office, ask “Call Amina to your office” or “Summon the Head of Security.” The person walks over for a brief visual visit, then returns to their desk. Only one person can visit at a time; the CEO will explain if they are away or another meeting is in progress. This is a scene simulation, not a real conversation with an employee.
@@ -25,6 +29,16 @@ The CEO chat receives the live staff directory, including names, roles, and offi
 ## Files
 - `index.html`: 3D scene, chat UI, and simulation.
 - `agent-brain.js`: keyword-based message routing, role reasoning, and plan formatting.
+- `agent-workflow.js`: validates and runs the Orchestrator → specialist handoffs → QA → Review workflow.
+- `agent-workflow.test.js`: focused tests for workflow ordering and validation.
+- `workspace-tools.js`: workspace-confined file access, patch validation, and fixed project checks.
+- `workspace-tools.test.js`: tests for workspace boundaries, approvals' patch preconditions, and checks.
+- `workflow-approvals.js`: pending workflow approval lifecycle, timeouts, and explicit resolution.
+- `workflow-approvals.test.js`: approval, decline, timeout, and setup-failure tests.
+- `workflow-tool-loop.js`: bounded provider tool-call loop and handoff collection.
+- `workflow-tool-loop.test.js`: tool-call validation, message handoffs, and execution-limit tests.
+- `workflow-store.js`: persisted live workflow status and interrupted-run recovery.
+- `workflow-store.test.js`: workflow state persistence and restart recovery tests.
 - `company-brain.json`: offices, roles, keywords, people, plan stages, and rules.
 - `company-brain.js`: generated from the JSON.
 - `agent-map.json`: maps office roles to prompt profiles under `Workspace/agents/`.
