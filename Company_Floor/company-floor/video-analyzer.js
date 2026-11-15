@@ -5,10 +5,9 @@
  * Works with YouTube URLs and local video files (MP4, MOV, WebM)
  */
 
-const https = require('https');
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
 const { promisify } = require('util');
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 const fs = require('fs');
 const path = require('path');
 
@@ -18,9 +17,11 @@ const path = require('path');
 function extractYouTubeId(url) {
   try {
     const urlObj = new URL(url);
+    if (urlObj.protocol !== 'https:') return null;
     if (urlObj.hostname === 'youtu.be') {
       return urlObj.pathname.slice(1, 12);
     }
+    if (!['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(urlObj.hostname)) return null;
     if (urlObj.searchParams.get('v')) {
       return urlObj.searchParams.get('v').slice(0, 11);
     }
@@ -36,7 +37,7 @@ function extractYouTubeId(url) {
  */
 async function checkFFmpeg() {
   try {
-    await execAsync('ffmpeg -version');
+    await execFileAsync('ffmpeg', ['-version'], { timeout: 10000 });
     return true;
   } catch (e) {
     return false;
@@ -61,21 +62,23 @@ async function extractFrames(videoPath, timestamps, outputDir) {
 
   for (let i = 0; i < timestamps.length; i++) {
     const timestamp = timestamps[i];
-    const outputPath = path.join(outputDir, `frame_${timestamp}s.jpg`);
-
-    // Extract single frame at timestamp
-    const cmd = `ffmpeg -ss ${timestamp} -i "${videoPath}" -vframes 1 -q:v 2 "${outputPath}" -y 2>&1`;
+    if (!Number.isFinite(timestamp) || timestamp < 0) throw new Error('Frame timestamps must be non-negative numbers.');
+    const outputPath = path.join(outputDir, `frame_${i}_${Math.floor(timestamp)}s.jpg`);
 
     try {
-      await execAsync(cmd);
+      await execFileAsync('ffmpeg', [
+        '-nostdin', '-v', 'error', '-ss', String(timestamp), '-i', videoPath,
+        '-frames:v', '1', '-vf', 'scale=640:-2', '-q:v', '5', '-y', outputPath
+      ], { timeout: 30000, maxBuffer: 1024 * 1024 });
       if (fs.existsSync(outputPath)) {
         framePaths.push(outputPath);
       }
     } catch (e) {
-      console.error(`Failed to extract frame at ${timestamp}s:`, e.message);
+      throw new Error(`Failed to extract frame at ${formatTimestamp(timestamp)}: ${e.message}`);
     }
   }
 
+  if (!framePaths.length) throw new Error('No video frames could be extracted.');
   return framePaths;
 }
 
@@ -84,7 +87,10 @@ async function extractFrames(videoPath, timestamps, outputDir) {
  */
 async function getVideoDuration(videoPath) {
   try {
-    const { stdout } = await execAsync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${videoPath}"`);
+    const { stdout } = await execFileAsync('ffprobe', [
+      '-v', 'error', '-show_entries', 'format=duration',
+      '-of', 'default=noprint_wrappers=1:nokey=1', videoPath
+    ], { timeout: 30000, maxBuffer: 1024 * 1024 });
     return parseFloat(stdout.trim());
   } catch (e) {
     throw new Error('Failed to get video duration: ' + e.message);
@@ -96,7 +102,9 @@ async function getVideoDuration(videoPath) {
  * Extracts frames at key moments: start, end, and evenly spaced throughout
  */
 function generateTimestamps(durationSeconds, frameCount = 10) {
-  if (durationSeconds <= 0) return [0];
+  if (!Number.isFinite(durationSeconds) || durationSeconds < 0) throw new Error('Video duration must be a non-negative number.');
+  if (!Number.isInteger(frameCount) || frameCount < 2 || frameCount > 20) throw new Error('Frame count must be between 2 and 20.');
+  if (durationSeconds === 0) return [0];
 
   const timestamps = [0]; // Always include start
 
@@ -143,9 +151,9 @@ function imageToBase64(imagePath) {
  * Falls back to explaining limitation if not installed
  */
 async function downloadYouTubeVideo(videoId, outputDir) {
-  // Check if yt-dlp is available
+  if (!/^[\w-]{11}$/.test(videoId)) throw new Error('Invalid YouTube video ID.');
   try {
-    await execAsync('yt-dlp --version');
+    await execFileAsync('yt-dlp', ['--version'], { timeout: 10000 });
   } catch (e) {
     throw new Error('yt-dlp is not installed. To analyze YouTube videos, install it with: pip install yt-dlp');
   }
@@ -154,10 +162,11 @@ async function downloadYouTubeVideo(videoId, outputDir) {
   const url = `https://www.youtube.com/watch?v=${videoId}`;
 
   // Download video (limit to 720p to save bandwidth/storage)
-  const cmd = `yt-dlp -f "best[height<=720]" -o "${outputPath}" "${url}"`;
-
   try {
-    await execAsync(cmd, { maxBuffer: 1024 * 1024 * 10 });
+    await execFileAsync('yt-dlp', [
+      '--no-playlist', '--format', 'best[height<=720]/best',
+      '--output', outputPath, '--', url
+    ], { timeout: 15 * 60 * 1000, maxBuffer: 1024 * 1024 * 10 });
     return outputPath;
   } catch (e) {
     throw new Error('Failed to download YouTube video: ' + e.message);
@@ -172,18 +181,28 @@ async function analyzeVideo(videoSource, options = {}) {
     frameCount = 8,
     customTimestamps = null,
     outputDir = path.join(__dirname, '.preview', 'video-frames'),
-    keepFrames = false
+    keepFrames = false,
+    maxDurationSeconds = 3 * 60 * 60
   } = options;
+  if (!Number.isFinite(maxDurationSeconds) || maxDurationSeconds <= 0) {
+    throw new Error('Maximum video duration must be a positive number.');
+  }
 
+  const { allowYouTubeDownload = false } = options;
   let videoPath;
   let isYouTube = false;
   let videoId = null;
 
-  // Determine if YouTube URL or local file
-  if (typeof videoSource === 'string' && (videoSource.includes('youtube.com') || videoSource.includes('youtu.be'))) {
+  // Determine if YouTube URL or local file.
+  let videoUrl = null;
+  if (typeof videoSource === 'string') {
+    try { videoUrl = new URL(videoSource); } catch (e) {}
+  }
+  if (videoUrl && ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'].includes(videoUrl.hostname)) {
     videoId = extractYouTubeId(videoSource);
-    if (!videoId) {
-      throw new Error('Invalid YouTube URL');
+    if (!videoId) throw new Error('Invalid YouTube URL');
+    if (!allowYouTubeDownload) {
+      throw new Error('YouTube analysis requires permission to download/process this video. Upload a video you have rights to use, or confirm permission before retrying.');
     }
     isYouTube = true;
 
@@ -201,6 +220,8 @@ async function analyzeVideo(videoSource, options = {}) {
 
   // Get video duration
   const duration = await getVideoDuration(videoPath);
+  if (!Number.isFinite(duration) || duration <= 0) throw new Error('Video duration could not be determined.');
+  if (duration > maxDurationSeconds) throw new Error('Videos longer than three hours are not supported.');
 
   // Generate or use custom timestamps
   const timestamps = customTimestamps || generateTimestamps(duration, frameCount);
@@ -249,16 +270,18 @@ module.exports = {
 
 // CLI usage
 if (require.main === module) {
-  const videoSource = process.argv[2];
+  const args = process.argv.slice(2);
+  const allowYouTubeDownload = args.includes('--i-have-permission');
+  const videoSource = args.find(arg => arg !== '--i-have-permission');
 
   if (!videoSource) {
-    console.log('Usage: node video-analyzer.js <youtube-url-or-video-file>');
+    console.log('Usage: node video-analyzer.js <video-file-or-youtube-url> [--i-have-permission]');
     console.log('Example: node video-analyzer.js https://youtube.com/watch?v=xxx');
     console.log('Example: node video-analyzer.js /path/to/video.mp4');
     process.exit(1);
   }
 
-  analyzeVideo(videoSource, { frameCount: 10, keepFrames: true })
+  analyzeVideo(videoSource, { frameCount: 10, keepFrames: true, allowYouTubeDownload })
     .then(result => {
       console.log('\n✓ Video analyzed successfully');
       console.log(`Duration: ${result.durationFormatted}`);

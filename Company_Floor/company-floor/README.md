@@ -1,6 +1,6 @@
 # Company Floor
 
-A 3D office floor with 16 offices, 80 agents and a CEO.
+A 3D office floor with 16 main-company offices, 80 agents, a CEO, Social Media Co., and Video Studio Co.
 
 ## Run it
 Open `index.html` in a modern browser with WebGL and internet access for the 3D libraries. Keep the files together.
@@ -23,6 +23,11 @@ The workflow uses local role profiles and restricted tools: it can list/read eli
 
 The workspace defaults to the app's repository directory; when starting `api-bridge.js` directly, use `--workspace <path>` to select another root. File tools reject traversal, symlinks, binary/oversized files, and credential-like paths. Checks use fixed Node commands, no shell, and a reduced environment, but approved test/build code still executes with the current user's local permissions. Review the requested check before approving it. Providers must support OpenAI-compatible tool calls; unsupported providers fail visibly rather than falling back to simulated or model-only success. The 3D meeting remains a separate simulation.
 
+## Video Studio Co.
+Video Studio Co. is a separate building north of the main floor, with Research, Script & Story, and Editing & Review rooms. Use the **Go to → Video Studio Co.** control to view it, or open **Tools → Video** to analyze a local MP4, MOV, or WebM upload or a YouTube URL. The bridge extracts up to six frames and sends them with your question to the configured vision-capable provider. It does not continuously process the video or transcribe audio, so events between sampled frames and spoken dialogue are not analyzed. Answers are instructed to cite sampled-frame timestamps.
+
+Install `ffmpeg` for frame extraction. YouTube analysis also requires `yt-dlp` and explicit confirmation that you have permission to download/process the video. Local uploads are limited to 150 MB and videos to three hours. Recent results are stored in browser local storage. See [QUICK_START.md](QUICK_START.md) and [VIDEO_SETUP.md](VIDEO_SETUP.md).
+
 ## CEO staff directory and office visits
 The CEO chat receives the live staff directory, including names, roles, and offices, so it can answer questions such as “What does Amina do?” or “List all employees and their roles.” To bring one person to the CEO office, ask “Call Amina to your office” or “Summon the Head of Security.” The person walks over for a brief visual visit, then returns to their desk. Only one person can visit at a time; the CEO will explain if they are away or another meeting is in progress. This is a scene simulation, not a real conversation with an employee.
 
@@ -44,10 +49,12 @@ The CEO chat receives the live staff directory, including names, roles, and offi
 - `agent-map.json`: maps office roles to prompt profiles under `Workspace/agents/`.
 - `build.js`: regenerates the generated JavaScript files.
 - `api-bridge.js`: local WebSocket server and API client.
+- `video-analyzer.js`: extracts bounded video frames for local analysis and the Video Studio API.
+- `video-analyzer.test.js`: tests YouTube URL validation, timestamps, and permission gating.
 - `setting.example.json`: safe template for the private `setting.json`.
 - `social-proxy.js`: optional social-account proxy.
 
-## Offices (16)
+## Main company offices (16)
 Front End Dev, Back End Dev, Skill Management, MCP Management, Research Agents, Memory & Context, QA & Testing, DevOps, Security, Orchestrator, Design & UX, Data & Analytics, Product & Planning, Docs & Knowledge, Cost & Budget, and Review & Approvals.
 
 ## Adding an office
@@ -64,10 +71,10 @@ A separate company in its own building south of the main one, with Instagram, Ti
 Reports are limited to public fields the proxy can fetch: YouTube and TikTok oEmbed data, plus YouTube views, likes, and description if `YOUTUBE_API_KEY` is configured. The model cannot watch videos. Instagram has no public post data without an approved app token. YouTube uploads wait for approval; Instagram and TikTok posting are not implemented.
 
 ## Tools panel
-Install reviews a link for an agent profile or skill and asks for approval before saving under `Workspace/agents/` or `Workspace/skills/`. Approvals also gate social uploads. History is kept locally in `Workspace/.os/jobs.jsonl`. The Social tab shows proxy account status. Scene controls sound and day/night lighting.
+Install reviews a link for an agent profile or skill and asks for approval before saving under `Workspace/agents/` or `Workspace/skills/`. Approvals also gate social uploads. History is kept locally in `Workspace/.os/jobs.jsonl`. The Video tab keeps recent analyses in browser local storage; the Social tab shows proxy account status. Scene controls sound and day/night lighting.
 
 ## Social proxy
 The optional `social-proxy.js` binds to `127.0.0.1`, requires `SOCIAL_PROXY_KEY`, uses random OAuth state, encrypts OAuth tokens, and defaults uploads to private. Copy `social-proxy.env.example` to `.env` and set `TOKEN_ENCRYPTION_KEY` (64 hex characters) and `SOCIAL_PROXY_KEY`.
 
 ## Layout
-The two buildings are 14 m apart (main building z -20..20, Social Media Co. z 36..56), connected by a paved path. Courier robots carry requests and reports between offices and buildings.
+The main floor is at z -20..20. Video Studio Co. is north of it, and Social Media Co. is south. Both separate buildings have dedicated view controls.

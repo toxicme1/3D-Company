@@ -2,7 +2,10 @@
 // Local OpenAI-compatible API bridge for the Company Floor (Node 18+, no dependencies).
 // Configure provider credentials in setting.json. Workspace tools are limited to local-provider workflows.
 const http = require('http'), https = require('https'), crypto = require('crypto'), fs = require('fs'), path = require('path'), dns = require('dns'), net = require('net');
+const { Transform } = require('stream');
+const { pipeline } = require('stream/promises');
 const { runWorkflow } = require('./agent-workflow');
+const { analyzeVideo } = require('./video-analyzer');
 const { WorkspaceTools } = require('./workspace-tools');
 const { WorkflowStore } = require('./workflow-store');
 const { WorkflowApprovalQueue } = require('./workflow-approvals');
@@ -49,6 +52,8 @@ try {
 const API_TIMEOUT = Math.max(10000, Math.min(Number(SETTINGS.timeoutMs) || 120000, 600000));
 const API_KEY = SETTINGS.apiKey.trim();
 const LOCAL_PROVIDER = ['localhost', '127.0.0.1', '[::1]'].includes(new URL(API_URL).hostname);
+const MAX_VIDEO_UPLOAD_BYTES = 150 * 1024 * 1024;
+const VIDEO_EXTENSIONS = new Set(['.mp4', '.mov', '.webm']);
 const WORKFLOW_PROFILES = Array.from(new Set(
   AGENT_MAP.offices
     .concat(Object.values(AGENT_MAP.support || {}).flat())
@@ -407,14 +412,6 @@ async function runWorkflowTool(agent, name, args, context) {
       return { approved: false, message };
     }
     status('running_check', 'QA is running the approved ' + check + ' check.');
-    const result = await WORKSPACE_TOOLS.runCheck(check);
-    context.recordEvidence(Object.assign({ type: 'check_result' }, result));
-    status('qa', 'The ' + check + ' check ' + (result.ok ? 'passed.' : 'failed.'));
-    return result;
-  }
-  throw new Error('Unknown workspace tool: ' + name);
-}
-
 async function askWorkflowAgent(agent, text, rules, context) {
   if (!LOCAL_PROVIDER) {
     throw new Error('Repository tools are disabled for non-local providers so workspace code is not sent to a third party. Configure an OpenAI-compatible provider on localhost, 127.0.0.1, or [::1].');
@@ -607,7 +604,130 @@ function parse(sock, buf, onText) {
     if (op === 8) { sock.end(); return Buffer.alloc(0); } if (op === 9) sock.write(Buffer.concat([Buffer.from([0x8a, data.length]), data])); if (op === 1) onText(data.toString('utf8'));
   }
 }
-const srv = http.createServer((q, r) => { r.writeHead(200, { 'content-type': 'text/plain' }); r.end('Company Floor API bridge is running. Connect from the page.\n'); });
+function videoResponse(r, statusCode, value) {
+  r.writeHead(statusCode, {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'POST, OPTIONS',
+    'access-control-allow-headers': 'Content-Type',
+    'cache-control': 'no-store',
+    'content-type': 'application/json; charset=utf-8'
+  });
+  if (statusCode === 204) return r.end();
+  r.end(JSON.stringify(value));
+}
+function sameToken(value) {
+  if (typeof value !== 'string') return false;
+  const expected = Buffer.from(TOKEN), received = Buffer.from(value);
+  return expected.length === received.length && crypto.timingSafeEqual(expected, received);
+}
+async function saveVideoUpload(req, destination) {
+  const declared = Number(req.headers['content-length'] || 0);
+  if (declared > MAX_VIDEO_UPLOAD_BYTES) throw new Error('Video uploads must be 150 MB or smaller.');
+  let bytes = 0;
+  const limit = new Transform({
+    transform(chunk, encoding, callback) {
+      bytes += chunk.length;
+      if (bytes > MAX_VIDEO_UPLOAD_BYTES) callback(new Error('Video uploads must be 150 MB or smaller.'));
+      else callback(null, chunk);
+    }
+  });
+  await pipeline(req, limit, fs.createWriteStream(destination, { flags: 'wx', mode: 0o600 }));
+  if (!bytes) throw new Error('The uploaded video file is empty.');
+}
+async function handleVideoRequest(req, res, url) {
+  if (req.method === 'OPTIONS') return videoResponse(res, 204, {});
+  if (req.method !== 'POST') return videoResponse(res, 405, { ok: false, error: 'Use POST to analyze a video.' });
+  if (!sameToken(url.searchParams.get('token'))) return videoResponse(res, 401, { ok: false, error: 'Invalid local bridge token.' });
+  const question = String(url.searchParams.get('question') || '').trim().slice(0, 1000);
+  const upload = url.searchParams.get('upload') === '1';
+  const source = url.searchParams.get('source') || '';
+  const allowYouTubeDownload = url.searchParams.get('allowYouTubeDownload') === 'true';
+  if (upload === !!source) return videoResponse(res, 400, { ok: false, error: 'Choose exactly one uploaded video or YouTube URL.' });
+  const originalName = String(url.searchParams.get('name') || 'video').replace(/\\/g, '/').split('/').pop().slice(0, 120);
+  const extension = path.extname(originalName).toLowerCase();
+  if (upload && !VIDEO_EXTENSIONS.has(extension)) {
+    req.resume();
+    return videoResponse(res, 415, { ok: false, error: 'Upload an MP4, MOV, or WebM video.' });
+  }
+  if (source && !/^https:\/\/(?:(?:www|m)\.)?(?:youtube\.com|youtu\.be)\//i.test(source)) {
+    req.resume();
+    return videoResponse(res, 400, { ok: false, error: 'Enter a YouTube video URL or upload a local video.' });
+  }
+  if (source && !allowYouTubeDownload) {
+    req.resume();
+    return videoResponse(res, 403, { ok: false, error: 'Confirm that you have permission to download/process this YouTube video, or upload a video you have rights to use.' });
+  }
+  const tempDir = fs.mkdtempSync(path.join(OS, 'video-'));
+  const inputPath = upload ? path.join(tempDir, 'upload' + extension) : source;
+  const displayName = upload ? originalName : source;
+  const startedAt = Date.now();
+  try {
+    if (upload) await saveVideoUpload(req, inputPath);
+    const analysis = await analyzeVideo(inputPath, {
+      outputDir: path.join(tempDir, 'analysis'),
+      frameCount: 6,
+      keepFrames: true,
+      allowYouTubeDownload
+    });
+    if (analysis.duration > 3 * 60 * 60) throw new Error('Videos longer than three hours are not supported.');
+    const sampledFrames = analysis.frames.map(frame => ({
+      type: 'image_url',
+      image_url: { url: 'data:image/jpeg;base64,' + frame.base64, detail: 'low' }
+    }));
+    const timestamps = analysis.frames.map(frame => frame.timestampFormatted);
+    const prompt = [
+      'Analyze this video using only the supplied sampled frames. The frames are sparse samples, not continuous playback.',
+      'Answer the user question directly. Every claim about video content must include the exact timestamp of a supplied frame in [MM:SS] format.',
+      'Never invent dialogue, quotes, events, names, or details that are not clearly visible in the frames. Say when the samples do not establish an answer.',
+      'Available frame timestamps: ' + timestamps.join(', '),
+      'User question: ' + (question || 'Summarize the video and list the key visible moments.')
+    ].join('\n\n');
+    const answer = await complete([
+      { role: 'system', content: 'You are Video Studio Co. Analyze visual evidence carefully, cite timestamps for every video-content claim, and state limits plainly.' },
+      { role: 'user', content: [{ type: 'text', text: prompt }].concat(sampledFrames) }
+    ]);
+    const result = {
+      ok: true,
+      name: displayName,
+      durationSeconds: analysis.duration,
+      durationFormatted: analysis.durationFormatted,
+      frameCount: analysis.frameCount,
+      timestamps,
+      answer
+    };
+    const job = logJob({
+      who: 'Video Studio Co.',
+      ok: true,
+      ms: Date.now() - startedAt,
+      text: displayName + ': ' + (question || 'video summary').slice(0, 240)
+    });
+    result.job = job;
+    videoResponse(res, 200, result);
+  } catch (error) {
+    const message = error && error.message ? error.message : 'Video analysis failed.';
+    logJob({ who: 'Video Studio Co.', ok: false, ms: Date.now() - startedAt, text: message.slice(0, 300) });
+    videoResponse(res, /150 MB|empty|Upload|YouTube|permission|Invalid|ffmpeg|yt-dlp|duration/i.test(message) ? 400 : 502, { ok: false, error: message });
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+const srv = http.createServer((q, r) => {
+  let url;
+  try { url = new URL(q.url, 'http://127.0.0.1'); } catch (error) { r.writeHead(400); r.end('Invalid request URL.\n'); return; }
+  if (url.pathname === '/video') {
+    const origin = q.headers.origin;
+    if (origin && origin !== 'null' && !/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(origin)) {
+      videoResponse(r, 403, { ok: false, error: 'Video analysis is available only to local pages.' });
+      return;
+    }
+    handleVideoRequest(q, r, url).catch(error => {
+      console.error('Video request failed:', error);
+      if (!r.headersSent) videoResponse(r, 500, { ok: false, error: error.message || 'Video analysis failed.' });
+    });
+    return;
+  }
+  r.writeHead(200, { 'content-type': 'text/plain' }); r.end('Company Floor API bridge is running. Connect from the page.\n');
+});
 srv.on('upgrade', (req, sock) => {
   const u = new URL(req.url, 'http://x'), key = req.headers['sec-websocket-key'];
   const ok = key && u.searchParams.get('token') === TOKEN;

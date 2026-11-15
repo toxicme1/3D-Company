@@ -16,6 +16,16 @@ gh api -H 'Accept: application/vnd.github.raw' \
 
 This fetches the installer and source archive using your GitHub CLI login. It installs under `~/.local/share/3d-company` and creates `~/.local/bin/3DCOMPANY`. It requires `gh`, `curl`, `tar`, and Node.js 18 or newer; it does not require `git` or `sudo`.
 
+To update an existing installation from the Video Studio feature branch, use:
+
+```bash
+gh api -H 'Accept: application/vnd.github.raw' \
+  'repos/toxicme1/3D-Company/contents/install.sh?ref=feature/agent-workflow-and-tools' \
+  | GH_TOKEN="$(gh auth token)" bash -s -- --update --ref feature/agent-workflow-and-tools
+```
+
+The updater replaces application files but keeps `setting.json` and your existing workspace. Start `3DCOMPANY` again and select **Video Studio Co.** from the floor's view controls. Open **Tools → Video** to analyze a video.
+
 If the repo is public, this simpler command works without GitHub CLI:
 
 ```bash
@@ -59,16 +69,26 @@ For OmniRoute or another provider, enter its OpenAI-compatible API base URL and 
 
 The launcher starts the API bridge and opens the page with its local connection prefilled. Keep the terminal open while using the app; press Ctrl+C to stop the bridge.
 
+## 4. Video Studio Co.
+Install `ffmpeg` to extract frames. YouTube URLs additionally require `yt-dlp` and your confirmation that you have permission to download/process the video:
+
+```bash
+sudo apt-get install ffmpeg
+python3 -m pip install --user yt-dlp
+```
+
+Open **Tools → Video**, upload an MP4/MOV/WebM file or enter a YouTube URL, and ask a question. The bridge samples up to six frames and sends them to your configured vision-capable provider. Uploads are limited to 150 MB and three-hour videos. The feature does not transcribe audio or watch every frame, so events between samples may be missed. See [QUICK_START.md](QUICK_START.md) for details.
+
 Ordinary chat sends prompts and role-profile text to the configured provider. The `/workflow <task>` command can inspect eligible workspace text files, but only when the configured OpenAI-compatible provider is on localhost or loopback and supports tool calls. The bridge blocks provider redirects, but a local proxy may independently forward requests; configure it accordingly. Proposed single-file patches and each fixed test/build check wait for approval in Tools > Approvals. Test/build code executes with your local user's permissions, so review each request before approving it. Use `node api-bridge.js --workspace /path/to/repository` when starting the bridge directly to choose a different workspace root. The 3D meetings and office animations remain simulations.
 
-## 4. Optional: Social Media Co.
+## 5. Optional: Social Media Co.
 1. Copy `social-proxy.env.example` to `.env` next to `social-proxy.js` and fill in credentials for the platforms you use.
 2. Set `SOCIAL_PROXY_KEY` in the environment where you start `api-bridge.js`, using the same value as in `.env`.
 3. Start the proxy with `node social-proxy.js`.
 
 YouTube posting waits for in-app approval and defaults to private. Instagram and TikTok posting are not implemented. Reports only use public fields the proxy can fetch; the model cannot watch videos.
 
-## 5. Troubleshooting
+## 6. Troubleshooting
 - **Missing API key/config:** check `setting.json` has non-empty `baseUrl`, `apiKey`, and `model`.
 - **401/403:** verify the key and model access with your provider.
 - **404:** check the provider's base URL; the bridge appends `/chat/completions`.

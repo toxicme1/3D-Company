@@ -1,117 +1,53 @@
 # Video Studio - Quick Start
 
-## Get Your Video Studio Watching Videos in 3 Steps
+## Install the feature branch
 
-### Step 1: Install Required Tools (5 minutes)
+For an existing private-repository installation, update from the feature branch:
 
 ```bash
-# Install ffmpeg (to extract video frames)
+gh api -H 'Accept: application/vnd.github.raw' \
+  'repos/toxicme1/3D-Company/contents/install.sh?ref=feature/agent-workflow-and-tools' \
+  | GH_TOKEN="$(gh auth token)" bash -s -- --update --ref feature/agent-workflow-and-tools
+```
+
+The updater preserves your API settings and workspace. Run `3DCOMPANY` again after it completes.
+
+## Install video tools
+
+Video frame extraction requires `ffmpeg`:
+
+```bash
 sudo apt-get update && sudo apt-get install -y ffmpeg
-
-# Optional: Install yt-dlp for YouTube videos
-pip3 install yt-dlp
-
-# Verify installation
-ffmpeg -version
-yt-dlp --version
 ```
 
-### Step 2: Create setting.json (1 minute)
-
-Create `setting.json` in this directory with your API key:
-
-```json
-{
-  "baseUrl": "https://api.anthropic.com/v1",
-  "apiKey": "sk-ant-...",
-  "model": "claude-3-5-sonnet-20241022",
-  "timeoutMs": 120000
-}
-```
-
-**Get Claude API key:** https://console.anthropic.com/settings/keys
-
-**Or use OpenRouter** (supports multiple providers):
-```json
-{
-  "baseUrl": "https://openrouter.ai/api/v1",
-  "apiKey": "sk-or-v1-...",
-  "model": "anthropic/claude-3.5-sonnet",
-  "timeoutMs": 120000
-}
-```
-
-**Get OpenRouter key:** https://openrouter.ai/keys
-
-### Step 3: Test It (1 minute)
+YouTube URL analysis also requires `yt-dlp` and confirmation that you have permission to download/process that video:
 
 ```bash
-# Test with a local video file
-node video-analyzer.js /path/to/your/video.mp4
-
-# Or test with YouTube
-node video-analyzer.js "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+python3 -m pip install --user yt-dlp
 ```
 
-You should see:
+The bridge uses the API settings you configured for Company Floor. Choose a vision-capable model.
+
+## Analyze a video
+
+1. Start `3DCOMPANY` and keep its terminal open.
+2. Select **Video Studio Co.** in the floor's **Go to** controls to see the studio.
+3. Open **Tools → Video**.
+4. Choose an MP4, MOV, or WebM file, or enter a YouTube URL. Add a question and select **Analyze video**.
+5. To analyze a YouTube URL, check the permission confirmation first.
+
+The app samples up to six frames and sends those images and your question to the configured AI provider. Answers are required to cite sampled-frame timestamps. It does not transcribe audio, and it may miss events between sampled frames. Recent results are stored in browser local storage.
+
+## Troubleshooting
+
+- **ffmpeg not found:** install it and restart `3DCOMPANY`.
+- **Model cannot analyze images:** choose a vision-capable provider/model in `3DCOMPANY --setup`.
+- **YouTube analysis fails:** install `yt-dlp`, check the URL, and confirm permission to process/download the video.
+- **Bridge offline:** keep the `3DCOMPANY` terminal open and reconnect the bridge in the chat panel.
+
+The `video-analyzer.js` CLI can also extract frames for inspection:
+
+```bash
+node video-analyzer.js /path/to/video.mp4
+node video-analyzer.js 'https://www.youtube.com/watch?v=VIDEO_ID' --i-have-permission
 ```
-✓ Video analyzed successfully
-Duration: 3:32
-Frames extracted: 8
-
-Frames at timestamps:
-  0:00 - /path/to/frame_0s.jpg
-  0:15 - /path/to/frame_15s.jpg
-  ...
-```
-
-## That's It! 🎉
-
-Your Video Studio can now:
-- ✅ Watch YouTube videos
-- ✅ Analyze local video files (MP4, MOV, WebM)
-- ✅ Answer questions about video content
-- ✅ Find specific moments with timestamps
-- ✅ Extract key information
-
-## Example Usage
-
-Ask your video-researcher agent:
-
-```
-"Watch this video and tell me what it's about:
-https://www.youtube.com/watch?v=xxxxx"
-```
-
-```
-"Where do they explain the pricing model?"
-```
-
-```
-"What are the main points covered in this video?"
-```
-
-```
-"Find all mentions of [product name] and give me timestamps"
-```
-
-## Minimal Setup (Just Local Videos)
-
-If you only want to analyze local video files (no YouTube):
-
-1. Install only ffmpeg: `sudo apt-get install ffmpeg`
-2. Create setting.json with your API key
-3. Done!
-
-Skip yt-dlp if you don't need YouTube support.
-
-## Need Help?
-
-See full documentation: `VIDEO_SETUP.md`
-
-## Current Status (2026-11-15)
-
-- ✅ Video analyzer created (`video-analyzer.js`)
-- ✅ video-researcher agent updated with vision capabilities
-- ⏳ Waiting for: ffmpeg installation
-- ⏳ Waiting for: setting.json with API key
