@@ -40,7 +40,9 @@ Run:
 
     3DCOMPANY
 
-The first run asks for your API Base URL, API key, and model. The API key is entered without echoing it and the settings are saved in the Git-ignored `setting.json` beside the app. Next runs reuse the saved settings. To change them later, run `3DCOMPANY --setup`.
+The first run asks for your API Base URL and API key, then fetches the provider's `/models` endpoint and lets you select an available model. The API key is entered without echoing it and the settings are saved in the Git-ignored `setting.json` beside the app. Next runs reuse the saved settings. To change them later, run `3DCOMPANY --setup`. Run `3DCOMPANY --test-api` at any time to fetch and display the configured provider's available models without starting the app.
+
+If model fetching fails, setup displays the provider's error and defaults to cancelling. You can explicitly continue and enter a model manually if your provider doesn't implement the OpenAI-compatible `/models` endpoint. A successful models response confirms that the endpoint is reachable; providers that allow public model listings may not validate the API key until a chat request is made.
 
 Defaults are OpenRouter-compatible:
 

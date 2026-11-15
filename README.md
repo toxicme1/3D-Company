@@ -10,7 +10,7 @@ gh api -H 'Accept: application/vnd.github.raw' \
   | GH_TOKEN="$(gh auth token)" bash
 ```
 
-This keeps the repo private and installs the latest version without cloning it. After confirming `~/.local/bin` is on your PATH, run `3DCOMPANY` from any terminal. On first run it asks for your OpenRouter/OmniRoute-compatible Base URL, API key, and model, saves them locally, starts the bridge, and opens the app. Later runs reuse the saved settings. Use `3DCOMPANY --setup` to change provider settings.
+This keeps the repo private and installs the latest version without cloning it. After confirming `~/.local/bin` is on your PATH, run `3DCOMPANY` from any terminal. On first run it asks for your OpenRouter/OmniRoute-compatible Base URL and API key, fetches the provider's model list, and lets you choose a model. Later runs reuse the saved settings. Use `3DCOMPANY --setup` to change provider settings or `3DCOMPANY --test-api` to fetch and display the configured provider's models.
 
 If the repository is made public later, the shorter unauthenticated command also works:
 
