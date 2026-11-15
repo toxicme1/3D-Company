@@ -1,0 +1,6 @@
+{
+  "baseUrl": "https://openrouter.ai/api/v1",
+  "apiKey": "",
+  "model": "openai/gpt-4o-mini",
+  "timeoutMs": 120000
+}

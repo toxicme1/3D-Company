@@ -1,0 +1,57 @@
+/* Generated from agent-map.json by build.js. */
+window.AGENT_MAP = {
+ "note": "Which Workspace/agents/<name>.md role profile each person uses. Edit this, then run: node build.js",
+ "offices": [
+  "frontend-developer",
+  "backend-architect",
+  "skill-manager",
+  "mcp-manager",
+  "researcher",
+  "memory-keeper",
+  "test-engineer",
+  "devops-engineer",
+  "security-auditor",
+  "orchestrator",
+  "ui-ux-designer",
+  "data-analyst",
+  "product-manager",
+  "docs-writer",
+  "cost-controller",
+  "approvals-reviewer"
+ ],
+ "support": {
+  "0": [
+   "mobile-developer"
+  ],
+  "1": [
+   "python-pro"
+  ],
+  "2": [
+   "prompt-engineer"
+  ],
+  "6": [
+   "debugger",
+   "code-reviewer"
+  ],
+  "7": [
+   "cli-developer"
+  ],
+  "11": [
+   "python-pro"
+  ],
+  "15": [
+   "code-reviewer"
+  ]
+ },
+ "roles": {
+  "Bug Triager": "debugger",
+  "Code Reviewer": "code-reviewer",
+  "Skill Author": "prompt-engineer",
+  "Data Engineer": "python-pro"
+ },
+ "social": [
+  "instagram-manager",
+  "tiktok-manager",
+  "youtube-manager"
+ ]
+};

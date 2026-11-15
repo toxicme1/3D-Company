@@ -1,0 +1,2444 @@
+/* Generated from company-brain.json by build.js. Edit the JSON, then run: node build.js */
+window.COMPANY_BRAIN = {
+ "company": {
+  "name": "Company Floor",
+  "ceo": {
+   "title": "CEO",
+   "duties": "Collects a proposal from each office head, merges them into ONE plan for the user, and sends it to the offices only after the user approves."
+  },
+  "rules": [
+   "Reason first: who am I, what was asked, is it my job, then decide the next move.",
+   "Only start work on requests that match my role. Otherwise hand them to the right person and say who.",
+   "Office heads never send a plan to the user. They send a proposal to the CEO.",
+   "The CEO only calls the offices that matter for the task. Product & Planning, Cost & Budget, QA & Testing and Review & Approvals are always involved.",
+   "The CEO merges the proposals into one plan and sends only that plan to the user.",
+   "Nothing starts until the user approves. After approval the CEO dispatches the plan to the offices.",
+   "Never claim work was done that was not."
+  ]
+ },
+ "offices": [
+  {
+   "idx": 0,
+   "name": "Front End Dev",
+   "mission": "Builds everything people see and touch: screens, components, styling, motion and accessibility.",
+   "kw": [
+    "login page",
+    "dark mode",
+    "ui",
+    "interface",
+    "page",
+    "screen",
+    "button",
+    "form",
+    "layout",
+    "css",
+    "style",
+    "component",
+    "responsive",
+    "mobile",
+    "accessibility",
+    "a11y",
+    "animation",
+    "frontend",
+    "front",
+    "end",
+    "react",
+    "html",
+    "landing",
+    "theme"
+   ]
+  },
+  {
+   "idx": 1,
+   "name": "Back End Dev",
+   "mission": "Builds the services behind the screens: APIs, databases, sign in, background jobs and caching.",
+   "kw": [
+    "api",
+    "endpoint",
+    "server",
+    "backend",
+    "back",
+    "end",
+    "database",
+    "db",
+    "sql",
+    "schema",
+    "auth",
+    "token",
+    "session",
+    "queue",
+    "job",
+    "cache",
+    "redis",
+    "migration",
+    "data"
+   ]
+  },
+  {
+   "idx": 2,
+   "name": "Skill Management",
+   "mission": "Writes, catalogs, routes, tests and curates the reusable skills agents use.",
+   "kw": [
+    "skill",
+    "skills",
+    "playbook",
+    "template",
+    "routine",
+    "capability",
+    "recipe",
+    "registry",
+    "catalog"
+   ]
+  },
+  {
+   "idx": 3,
+   "name": "MCP Management",
+   "mission": "Runs the MCP gateway, the tool list and the connectors to outside apps.",
+   "kw": [
+    "mcp",
+    "tool",
+    "tools",
+    "connector",
+    "integration",
+    "protocol",
+    "plugin",
+    "gateway",
+    "slack",
+    "github",
+    "drive",
+    "calendar"
+   ]
+  },
+  {
+   "idx": 4,
+   "name": "Research Agents",
+   "mission": "Finds, reads, verifies and summarizes information, and keeps track of sources.",
+   "kw": [
+    "research",
+    "find",
+    "search",
+    "source",
+    "paper",
+    "study",
+    "report",
+    "fact",
+    "verify",
+    "summary",
+    "summarize",
+    "compare",
+    "market",
+    "competitor",
+    "citation"
+   ]
+  },
+  {
+   "idx": 5,
+   "name": "Memory & Context",
+   "mission": "Remembers what the company knows and packs the right context for each task.",
+   "kw": [
+    "memory",
+    "remember",
+    "context",
+    "history",
+    "vector",
+    "embedding",
+    "index",
+    "profile",
+    "archive",
+    "recall",
+    "notes",
+    "knowledge"
+   ]
+  },
+  {
+   "idx": 6,
+   "name": "QA & Testing",
+   "mission": "Tests the product and reviews code before anything ships.",
+   "kw": [
+    "test",
+    "tests",
+    "bug",
+    "qa",
+    "regression",
+    "performance",
+    "benchmark",
+    "review",
+    "quality",
+    "e2e",
+    "unit",
+    "flaky",
+    "crash"
+   ]
+  },
+  {
+   "idx": 7,
+   "name": "DevOps",
+   "mission": "Builds, deploys and watches the systems the product runs on.",
+   "kw": [
+    "deploy",
+    "release",
+    "ci",
+    "cd",
+    "pipeline",
+    "infra",
+    "cloud",
+    "docker",
+    "monitor",
+    "uptime",
+    "rollout",
+    "staging",
+    "production",
+    "hosting"
+   ]
+  },
+  {
+   "idx": 8,
+   "name": "Security",
+   "mission": "Protects access, secrets and data, and keeps the audit trail and policies.",
+   "kw": [
+    "security",
+    "permission",
+    "secret",
+    "key",
+    "password",
+    "audit",
+    "vulnerability",
+    "policy",
+    "access",
+    "sandbox",
+    "compliance",
+    "risk",
+    "privacy"
+   ]
+  },
+  {
+   "idx": 9,
+   "name": "Orchestrator",
+   "mission": "Plans work, assigns it to the right office, schedules it and keeps projects moving.",
+   "kw": [
+    "plan",
+    "schedule",
+    "priority",
+    "assign",
+    "route",
+    "coordinate",
+    "timeline",
+    "roadmap",
+    "workflow",
+    "handoff",
+    "supervise",
+    "deadline",
+    "delegate"
+   ]
+  },
+  {
+   "idx": 10,
+   "name": "Design & UX",
+   "mission": "Designs how the product works and looks, and tests it with real users.",
+   "kw": [
+    "design system",
+    "user flow",
+    "design",
+    "ux",
+    "wireframe",
+    "prototype",
+    "mockup",
+    "brand",
+    "logo",
+    "usability",
+    "persona",
+    "journey",
+    "visual"
+   ]
+  },
+  {
+   "idx": 11,
+   "name": "Data & Analytics",
+   "mission": "Measures how the product is used and turns the numbers into dashboards and reports.",
+   "kw": [
+    "data analysis",
+    "analytics",
+    "metric",
+    "kpi",
+    "dashboard",
+    "chart",
+    "report",
+    "insight",
+    "trend",
+    "funnel",
+    "usage",
+    "statistics"
+   ]
+  },
+  {
+   "idx": 12,
+   "name": "Product & Planning",
+   "mission": "Turns your idea into scope, requirements and priorities before anyone builds.",
+   "kw": [
+    "requirement",
+    "scope",
+    "user story",
+    "feature",
+    "backlog",
+    "prioritize",
+    "priority",
+    "mvp",
+    "acceptance",
+    "product",
+    "idea",
+    "launch plan",
+    "spec"
+   ]
+  },
+  {
+   "idx": 13,
+   "name": "Docs & Knowledge",
+   "mission": "Writes and maintains docs, guides, changelogs and the team knowledge base.",
+   "kw": [
+    "docs",
+    "documentation",
+    "guide",
+    "readme",
+    "changelog",
+    "tutorial",
+    "wiki",
+    "knowledge base",
+    "manual",
+    "how to",
+    "release notes"
+   ]
+  },
+  {
+   "idx": 14,
+   "name": "Cost & Budget",
+   "mission": "Tracks tokens, model usage and spend, and estimates what a plan will cost.",
+   "kw": [
+    "cost",
+    "budget",
+    "spend",
+    "price",
+    "pricing",
+    "tokens",
+    "billing",
+    "expensive",
+    "cheap",
+    "quota",
+    "forecast",
+    "estimate"
+   ]
+  },
+  {
+   "idx": 15,
+   "name": "Review & Approvals",
+   "mission": "Gives the final check before work is merged or shipped: code, compliance and sign-off.",
+   "kw": [
+    "approval",
+    "sign off",
+    "signoff",
+    "merge",
+    "gate",
+    "final check",
+    "go no go",
+    "compliance review",
+    "pull request",
+    "approve"
+   ]
+  }
+ ],
+ "roles": [
+  [
+   {
+    "role": "UI Engineer",
+    "duty": "build screens and page layouts",
+    "kw": [
+     "login page",
+     "ui",
+     "screen",
+     "page",
+     "layout",
+     "interface",
+     "form",
+     "dashboard",
+     "landing"
+    ],
+    "does": "sketch the layout, then build the screen and wire it up",
+    "done": "the screen is built and responsive",
+    "state": "coding",
+    "head": true
+   },
+   {
+    "role": "Component Builder",
+    "duty": "build reusable components",
+    "kw": [
+     "component",
+     "button",
+     "card",
+     "modal",
+     "widget",
+     "library",
+     "menu"
+    ],
+    "does": "build the component and add it to the library",
+    "done": "the component is built and documented",
+    "state": "coding",
+    "head": false
+   },
+   {
+    "role": "Accessibility Agent",
+    "duty": "make the product usable for everyone",
+    "kw": [
+     "screen reader",
+     "accessib",
+     "a11y",
+     "contrast",
+     "keyboard",
+     "aria",
+     "wcag"
+    ],
+    "does": "audit it against WCAG and fix what fails",
+    "done": "the audit is done and the fixes are in",
+    "state": "researching",
+    "head": false
+   },
+   {
+    "role": "Animation Agent",
+    "duty": "add motion and transitions",
+    "kw": [
+     "animat",
+     "motion",
+     "transition",
+     "effect",
+     "hover",
+     "loading"
+    ],
+    "does": "prototype the motion and tune the timing",
+    "done": "the animation is in and runs smoothly",
+    "state": "coding",
+    "head": false
+   },
+   {
+    "role": "Styling Agent",
+    "duty": "own styles, themes and spacing",
+    "kw": [
+     "dark mode",
+     "style",
+     "css",
+     "theme",
+     "color",
+     "colour",
+     "font",
+     "spacing",
+     "responsive",
+     "mobile"
+    ],
+    "does": "update the styles and check light and dark mode",
+    "done": "the styles are updated for light and dark",
+    "state": "writing",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "API Engineer",
+    "duty": "build and maintains the API",
+    "kw": [
+     "api",
+     "endpoint",
+     "route",
+     "rest",
+     "request",
+     "response",
+     "backend",
+     "server"
+    ],
+    "does": "design the endpoint and implement it with tests",
+    "done": "the endpoint is live and documented",
+    "state": "coding",
+    "head": true
+   },
+   {
+    "role": "Database Agent",
+    "duty": "own the database and its schemas",
+    "kw": [
+     "database",
+     "db",
+     "sql",
+     "schema",
+     "table",
+     "migration",
+     "query",
+     "data"
+    ],
+    "does": "draft the schema change and a safe migration",
+    "done": "the migration is ready and tested",
+    "state": "running",
+    "head": false
+   },
+   {
+    "role": "Auth Agent",
+    "duty": "handle sign in, sessions and tokens",
+    "kw": [
+     "sign in",
+     "auth",
+     "login",
+     "signin",
+     "token",
+     "session",
+     "password",
+     "oauth",
+     "sso"
+    ],
+    "does": "map the auth flow and implement the change",
+    "done": "the auth change is implemented",
+    "state": "coding",
+    "head": false
+   },
+   {
+    "role": "Queue Worker",
+    "duty": "run background jobs and queues",
+    "kw": [
+     "queue",
+     "job",
+     "background",
+     "worker",
+     "retry",
+     "batch",
+     "cron"
+    ],
+    "does": "set up the job and its retry rules",
+    "done": "the job is running and retries are set",
+    "state": "running",
+    "head": false
+   },
+   {
+    "role": "Cache Agent",
+    "duty": "keep things fast with caching",
+    "kw": [
+     "speed up",
+     "cache",
+     "redis",
+     "slow",
+     "latency",
+     "ttl",
+     "fast"
+    ],
+    "does": "find the slow path and add caching",
+    "done": "caching is in and latency is down",
+    "state": "running",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "Skill Author",
+    "duty": "write new skills",
+    "kw": [
+     "skill",
+     "author",
+     "draft",
+     "playbook",
+     "template"
+    ],
+    "does": "draft the skill and its instructions",
+    "done": "the skill draft is written",
+    "state": "writing",
+    "head": true
+   },
+   {
+    "role": "Skill Registry",
+    "duty": "keep the catalog of skills",
+    "kw": [
+     "list of skills",
+     "registry",
+     "catalog",
+     "publish",
+     "version"
+    ],
+    "does": "register it and version it in the catalog",
+    "done": "it is registered and versioned",
+    "state": "writing",
+    "head": false
+   },
+   {
+    "role": "Skill Router",
+    "duty": "match requests to the right skill",
+    "kw": [
+     "which skill",
+     "route",
+     "routing",
+     "match",
+     "select",
+     "pick"
+    ],
+    "does": "check the routing rules and pick the best match",
+    "done": "the routing is updated",
+    "state": "thinking",
+    "head": false
+   },
+   {
+    "role": "Skill Tester",
+    "duty": "validate skills before release",
+    "kw": [
+     "verify skill",
+     "check skill",
+     "test skill",
+     "validate",
+     "evaluate"
+    ],
+    "does": "run the skill against sample cases",
+    "done": "the skill passed its sample cases",
+    "state": "running",
+    "head": false
+   },
+   {
+    "role": "Skill Curator",
+    "duty": "keep skills tidy and current",
+    "kw": [
+     "clean up",
+     "curate",
+     "retire",
+     "outdated",
+     "organize",
+     "duplicate"
+    ],
+    "does": "review for duplicates and retire what is outdated",
+    "done": "the catalog is cleaned up",
+    "state": "researching",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "MCP Gateway",
+    "duty": "run the gateway to all MCP servers",
+    "kw": [
+     "mcp",
+     "gateway",
+     "proxy"
+    ],
+    "does": "check the gateway config and route the request",
+    "done": "the gateway is configured",
+    "state": "mcp",
+    "head": true
+   },
+   {
+    "role": "Tool Registry",
+    "duty": "keep the list of available tools",
+    "kw": [
+     "tool",
+     "tools",
+     "register",
+     "catalog"
+    ],
+    "does": "register the tool and describe its inputs",
+    "done": "the tool is registered",
+    "state": "mcp",
+    "head": false
+   },
+   {
+    "role": "Connector Agent",
+    "duty": "connect outside apps",
+    "kw": [
+     "connector",
+     "connect",
+     "integration",
+     "slack",
+     "github",
+     "drive",
+     "calendar",
+     "plugin"
+    ],
+    "does": "set up the connector and test the connection",
+    "done": "the connector is live",
+    "state": "mcp",
+    "head": false
+   },
+   {
+    "role": "Protocol Agent",
+    "duty": "own the protocol and message formats",
+    "kw": [
+     "message format",
+     "protocol",
+     "spec",
+     "handshake",
+     "schema"
+    ],
+    "does": "check the spec and fix the message format",
+    "done": "the message format is fixed",
+    "state": "mcp",
+    "head": false
+   },
+   {
+    "role": "Server Monitor",
+    "duty": "watch MCP server health",
+    "kw": [
+     "status of",
+     "health",
+     "uptime",
+     "down",
+     "outage",
+     "latency",
+     "server"
+    ],
+    "does": "check server health and alert on problems",
+    "done": "servers are healthy and alerts are set",
+    "state": "running",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "Web Researcher",
+    "duty": "search the web for answers",
+    "kw": [
+     "look up",
+     "web",
+     "search",
+     "find",
+     "online",
+     "competitor",
+     "market",
+     "research"
+    ],
+    "does": "search broadly and shortlist the best sources",
+    "done": "the findings are collected with sources",
+    "state": "researching",
+    "head": true
+   },
+   {
+    "role": "Paper Reader",
+    "duty": "read papers and studies",
+    "kw": [
+     "paper",
+     "study",
+     "journal",
+     "literature",
+     "pdf",
+     "academic"
+    ],
+    "does": "read the papers and pull out the key points",
+    "done": "the papers are read and summarized",
+    "state": "researching",
+    "head": false
+   },
+   {
+    "role": "Fact Checker",
+    "duty": "verify claims",
+    "kw": [
+     "fact",
+     "verify",
+     "true",
+     "claim",
+     "accurate",
+     "correct",
+     "check"
+    ],
+    "does": "check each claim against primary sources",
+    "done": "the claims are checked",
+    "state": "researching",
+    "head": false
+   },
+   {
+    "role": "Summarizer",
+    "duty": "turn long material into short summaries",
+    "kw": [
+     "summar",
+     "tl;dr",
+     "brief",
+     "shorten",
+     "digest",
+     "recap"
+    ],
+    "does": "read it through and write a tight summary",
+    "done": "the summary is written",
+    "state": "writing",
+    "head": false
+   },
+   {
+    "role": "Source Tracker",
+    "duty": "keep citations and sources",
+    "kw": [
+     "source",
+     "citation",
+     "cite",
+     "reference",
+     "link",
+     "bibliography"
+    ],
+    "does": "collect and format the sources",
+    "done": "the sources are listed",
+    "state": "writing",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "Memory Keeper",
+    "duty": "store and recalls what the team knows",
+    "kw": [
+     "memory",
+     "remember",
+     "recall",
+     "save",
+     "store",
+     "forget"
+    ],
+    "does": "save it and tag it so it can be found",
+    "done": "it is saved and tagged",
+    "state": "writing",
+    "head": true
+   },
+   {
+    "role": "Context Packer",
+    "duty": "pack the right context for each task",
+    "kw": [
+     "context",
+     "window",
+     "prompt",
+     "pack",
+     "token",
+     "compress",
+     "trim"
+    ],
+    "does": "select the relevant context and compress it",
+    "done": "the context pack is ready",
+    "state": "thinking",
+    "head": false
+   },
+   {
+    "role": "Vector Indexer",
+    "duty": "keep the search index",
+    "kw": [
+     "search index",
+     "vector",
+     "embedding",
+     "index",
+     "semantic",
+     "similarity"
+    ],
+    "does": "embed the content and update the index",
+    "done": "the index is updated",
+    "state": "running",
+    "head": false
+   },
+   {
+    "role": "Profile Agent",
+    "duty": "keep user and team profiles",
+    "kw": [
+     "user info",
+     "profile",
+     "preference",
+     "persona",
+     "settings"
+    ],
+    "does": "update the profile and check preferences",
+    "done": "the profile is updated",
+    "state": "writing",
+    "head": false
+   },
+   {
+    "role": "Archivist",
+    "duty": "archive and retrieves old records",
+    "kw": [
+     "archive",
+     "history",
+     "old",
+     "backup",
+     "log",
+     "past",
+     "record"
+    ],
+    "does": "locate the records and archive them safely",
+    "done": "the records are archived",
+    "state": "researching",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "Unit Tester",
+    "duty": "write and runs unit tests",
+    "kw": [
+     "function test",
+     "unit test",
+     "unit",
+     "coverage",
+     "test"
+    ],
+    "does": "write the unit tests and run them",
+    "done": "the unit tests pass",
+    "state": "running",
+    "head": true
+   },
+   {
+    "role": "E2E Tester",
+    "duty": "test whole user flows",
+    "kw": [
+     "browser test",
+     "end to end",
+     "user flow",
+     "e2e",
+     "flow",
+     "journey"
+    ],
+    "does": "script the user flow and run it end to end",
+    "done": "the end to end flow passes",
+    "state": "running",
+    "head": false
+   },
+   {
+    "role": "Bug Triager",
+    "duty": "sort and prioritizes bugs",
+    "kw": [
+     "bug",
+     "issue",
+     "triage",
+     "defect",
+     "crash",
+     "broken",
+     "error"
+    ],
+    "does": "reproduce it, rate severity and assign it",
+    "done": "the bug is triaged and assigned",
+    "state": "thinking",
+    "head": false
+   },
+   {
+    "role": "Perf Tester",
+    "duty": "test speed and load",
+    "kw": [
+     "performance",
+     "load",
+     "benchmark",
+     "stress",
+     "speed",
+     "slow",
+     "latency"
+    ],
+    "does": "run a benchmark and compare it to the baseline",
+    "done": "the benchmark results are in",
+    "state": "running",
+    "head": false
+   },
+   {
+    "role": "Code Reviewer",
+    "duty": "review code before it merges",
+    "kw": [
+     "pull request",
+     "code review",
+     "review",
+     "pr",
+     "refactor",
+     "merge"
+    ],
+    "does": "read the change and leave review comments",
+    "done": "the review is done",
+    "state": "coding",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "Deploy Agent",
+    "duty": "ship builds to environments",
+    "kw": [
+     "go live",
+     "deploy",
+     "ship",
+     "rollout",
+     "publish",
+     "staging",
+     "production"
+    ],
+    "does": "prepare the rollout and deploy to staging first",
+    "done": "it is deployed and verified",
+    "state": "running",
+    "head": true
+   },
+   {
+    "role": "CI Runner",
+    "duty": "run builds and checks",
+    "kw": [
+     "ci",
+     "pipeline",
+     "checks",
+     "actions",
+     "workflow"
+    ],
+    "does": "run the pipeline and report failures",
+    "done": "the pipeline is green",
+    "state": "running",
+    "head": false
+   },
+   {
+    "role": "Infra Agent",
+    "duty": "manage cloud and servers",
+    "kw": [
+     "infra",
+     "cloud",
+     "docker",
+     "server",
+     "scaling",
+     "network",
+     "kubernetes",
+     "hosting"
+    ],
+    "does": "review the infrastructure and apply the change",
+    "done": "the infrastructure change is applied",
+    "state": "mcp",
+    "head": false
+   },
+   {
+    "role": "Monitor Agent",
+    "duty": "watch logs, metrics and alerts",
+    "kw": [
+     "monitor",
+     "alert",
+     "uptime",
+     "logs",
+     "metrics",
+     "incident",
+     "dashboard"
+    ],
+    "does": "add the metric and an alert rule",
+    "done": "monitoring and alerts are in place",
+    "state": "researching",
+    "head": false
+   },
+   {
+    "role": "Release Manager",
+    "duty": "plan and tags releases",
+    "kw": [
+     "schedule release",
+     "release",
+     "version",
+     "changelog",
+     "tag",
+     "rollback"
+    ],
+    "does": "line up the release notes and the version tag",
+    "done": "the release is planned and tagged",
+    "state": "writing",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "Permission Guard",
+    "duty": "control who can access what",
+    "kw": [
+     "who can",
+     "permission",
+     "access",
+     "role",
+     "allow",
+     "deny",
+     "admin"
+    ],
+    "does": "review the roles and tighten access",
+    "done": "permissions are reviewed and tightened",
+    "state": "thinking",
+    "head": true
+   },
+   {
+    "role": "Secret Scanner",
+    "duty": "find leaked secrets",
+    "kw": [
+     "token leak",
+     "secret",
+     "key",
+     "credential",
+     "leak",
+     "password",
+     "env"
+    ],
+    "does": "scan for leaked keys and rotate any found",
+    "done": "the scan is clean",
+    "state": "running",
+    "head": false
+   },
+   {
+    "role": "Audit Agent",
+    "duty": "keep audit trails",
+    "kw": [
+     "audit",
+     "compliance",
+     "trail",
+     "report",
+     "evidence",
+     "soc"
+    ],
+    "does": "pull the audit trail and write it up",
+    "done": "the audit report is ready",
+    "state": "writing",
+    "head": false
+   },
+   {
+    "role": "Sandbox Agent",
+    "duty": "run untrusted work in isolation",
+    "kw": [
+     "sandbox",
+     "isolate",
+     "untrusted",
+     "safely",
+     "contain",
+     "quarantine"
+    ],
+    "does": "set up an isolated sandbox and run it there",
+    "done": "it ran safely in the sandbox",
+    "state": "running",
+    "head": false
+   },
+   {
+    "role": "Policy Agent",
+    "duty": "write and enforces policies",
+    "kw": [
+     "policy",
+     "rule",
+     "guideline",
+     "standard",
+     "privacy",
+     "gdpr",
+     "terms"
+    ],
+    "does": "check it against policy and draft the rule",
+    "done": "the policy check is done",
+    "state": "writing",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "Planner",
+    "duty": "break work into plans",
+    "kw": [
+     "break down",
+     "plan",
+     "roadmap",
+     "strategy",
+     "steps",
+     "scope",
+     "project"
+    ],
+    "does": "break it into steps and order them",
+    "done": "the plan is drafted",
+    "state": "thinking",
+    "head": true
+   },
+   {
+    "role": "Task Router",
+    "duty": "send work to the right people",
+    "kw": [
+     "handle this",
+     "who should",
+     "route",
+     "assign",
+     "delegate",
+     "owner"
+    ],
+    "does": "work out who owns it and assign it",
+    "done": "it is assigned to the right owner",
+    "state": "thinking",
+    "head": false
+   },
+   {
+    "role": "Scheduler",
+    "duty": "own timelines and deadlines",
+    "kw": [
+     "schedule",
+     "deadline",
+     "timeline",
+     "calendar",
+     "when",
+     "due",
+     "eta"
+    ],
+    "does": "check capacity and set the dates",
+    "done": "the schedule is set",
+    "state": "writing",
+    "head": false
+   },
+   {
+    "role": "Supervisor",
+    "duty": "watch progress and blockers",
+    "kw": [
+     "check on",
+     "progress",
+     "blocked",
+     "supervise",
+     "status",
+     "stuck"
+    ],
+    "does": "check where each office stands and unblock them",
+    "done": "progress is checked and blockers cleared",
+    "state": "thinking",
+    "head": false
+   },
+   {
+    "role": "Handoff Agent",
+    "duty": "pass work cleanly between offices",
+    "kw": [
+     "hand off",
+     "pass on",
+     "handoff",
+     "transfer",
+     "escalate",
+     "brief"
+    ],
+    "does": "write the handoff brief for the next office",
+    "done": "the handoff brief is sent",
+    "state": "writing",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "UX Designer",
+    "duty": "design user flows and wireframes",
+    "kw": [
+     "information architecture",
+     "journey map",
+     "user flow",
+     "ux",
+     "wireframe",
+     "navigation",
+     "design",
+     "persona"
+    ],
+    "does": "map the user flow and sketch the wireframes",
+    "done": "the flow and wireframes are ready",
+    "state": "thinking",
+    "head": true
+   },
+   {
+    "role": "Visual Designer",
+    "duty": "design the look: color, type and imagery",
+    "kw": [
+     "look and feel",
+     "visual",
+     "brand",
+     "logo",
+     "icon",
+     "illustration",
+     "mockup",
+     "typography",
+     "design"
+    ],
+    "does": "explore the look and produce a polished mockup",
+    "done": "the mockup is ready",
+    "state": "writing",
+    "head": false
+   },
+   {
+    "role": "Prototyper",
+    "duty": "build clickable prototypes",
+    "kw": [
+     "interactive mockup",
+     "proof of concept",
+     "prototype",
+     "clickable",
+     "demo",
+     "figma"
+    ],
+    "does": "build a clickable prototype to test the idea",
+    "done": "the prototype is ready to try",
+    "state": "coding",
+    "head": false
+   },
+   {
+    "role": "Design System Agent",
+    "duty": "keep the design system consistent",
+    "kw": [
+     "design system",
+     "spacing scale",
+     "style guide",
+     "tokens",
+     "guidelines",
+     "pattern",
+     "consistent"
+    ],
+    "does": "audit the patterns and update the tokens",
+    "done": "the design system is updated",
+    "state": "writing",
+    "head": false
+   },
+   {
+    "role": "Usability Researcher",
+    "duty": "test designs with real users",
+    "kw": [
+     "user research",
+     "user test",
+     "usability",
+     "feedback",
+     "survey",
+     "interview"
+    ],
+    "does": "plan a short user test and gather feedback",
+    "done": "the feedback is collected and summarized",
+    "state": "researching",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "Data Analyst",
+    "duty": "analyze data to answer questions",
+    "kw": [
+     "analyze",
+     "analysis",
+     "data",
+     "insight",
+     "trend",
+     "numbers",
+     "statistics",
+     "cohort"
+    ],
+    "does": "pull the data and analyze the trend",
+    "done": "the analysis is written up",
+    "state": "researching",
+    "head": true
+   },
+   {
+    "role": "Dashboard Builder",
+    "duty": "build dashboards and charts",
+    "kw": [
+     "dashboard",
+     "chart",
+     "graph",
+     "visuali",
+     "plot",
+     "tableau"
+    ],
+    "does": "design the charts and build the dashboard",
+    "done": "the dashboard is live",
+    "state": "coding",
+    "head": false
+   },
+   {
+    "role": "Metrics Agent",
+    "duty": "define and tracks key metrics",
+    "kw": [
+     "metric",
+     "kpi",
+     "track",
+     "usage",
+     "conversion",
+     "retention",
+     "funnel",
+     "adoption"
+    ],
+    "does": "define the metric and set up tracking",
+    "done": "the metric is tracked",
+    "state": "running",
+    "head": false
+   },
+   {
+    "role": "Data Engineer",
+    "duty": "build data pipelines",
+    "kw": [
+     "data pipeline",
+     "data model",
+     "sync data",
+     "etl",
+     "warehouse",
+     "ingest",
+     "export"
+    ],
+    "does": "build the pipeline and check data quality",
+    "done": "the pipeline runs and the data is clean",
+    "state": "running",
+    "head": false
+   },
+   {
+    "role": "Reporting Agent",
+    "duty": "produce regular reports",
+    "kw": [
+     "summary report",
+     "weekly report",
+     "report",
+     "monthly",
+     "stakeholder",
+     "quarterly",
+     "scorecard"
+    ],
+    "does": "assemble the numbers into a clear report",
+    "done": "the report is ready",
+    "state": "writing",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "Product Manager",
+    "duty": "own the scope and what gets built",
+    "kw": [
+     "product",
+     "feature",
+     "idea",
+     "scope",
+     "mvp",
+     "launch plan"
+    ],
+    "does": "write the scope and the success criteria",
+    "done": "the scope is written and agreed",
+    "state": "writing",
+    "head": true
+   },
+   {
+    "role": "Requirements Analyst",
+    "duty": "turn requests into clear requirements",
+    "kw": [
+     "requirement",
+     "user story",
+     "acceptance",
+     "edge case",
+     "need"
+    ],
+    "does": "list the requirements and the edge cases",
+    "done": "the requirements are written",
+    "state": "writing",
+    "head": false
+   },
+   {
+    "role": "Roadmap Planner",
+    "duty": "order work on the roadmap",
+    "kw": [
+     "roadmap",
+     "milestone",
+     "release plan",
+     "phase",
+     "quarter"
+    ],
+    "does": "place it on the roadmap with milestones",
+    "done": "the roadmap is updated",
+    "state": "thinking",
+    "head": false
+   },
+   {
+    "role": "Prioritizer",
+    "duty": "rank work by value and effort",
+    "kw": [
+     "prioritize",
+     "priority",
+     "backlog",
+     "rank",
+     "trade off",
+     "effort"
+    ],
+    "does": "score value against effort and rank it",
+    "done": "the backlog is ranked",
+    "state": "thinking",
+    "head": false
+   },
+   {
+    "role": "Spec Writer",
+    "duty": "write product specs",
+    "kw": [
+     "spec",
+     "specification",
+     "prd",
+     "brief",
+     "document the feature"
+    ],
+    "does": "draft the spec with acceptance criteria",
+    "done": "the spec is drafted",
+    "state": "writing",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "Docs Lead",
+    "duty": "own the documentation",
+    "kw": [
+     "docs",
+     "documentation",
+     "readme",
+     "wiki",
+     "manual"
+    ],
+    "does": "outline the docs and write the first draft",
+    "done": "the docs are written and published",
+    "state": "writing",
+    "head": true
+   },
+   {
+    "role": "Technical Writer",
+    "duty": "write guides and tutorials",
+    "kw": [
+     "guide",
+     "tutorial",
+     "how to",
+     "walkthrough",
+     "write up"
+    ],
+    "does": "write the guide with examples",
+    "done": "the guide is written",
+    "state": "writing",
+    "head": false
+   },
+   {
+    "role": "API Docs Agent",
+    "duty": "document the API",
+    "kw": [
+     "api docs",
+     "reference",
+     "openapi",
+     "swagger",
+     "sdk"
+    ],
+    "does": "generate the reference and add examples",
+    "done": "the API reference is updated",
+    "state": "writing",
+    "head": false
+   },
+   {
+    "role": "Changelog Agent",
+    "duty": "keep the changelog and release notes",
+    "kw": [
+     "changelog",
+     "release notes",
+     "what changed",
+     "version notes"
+    ],
+    "does": "collect the changes and write the release notes",
+    "done": "the release notes are written",
+    "state": "writing",
+    "head": false
+   },
+   {
+    "role": "Knowledge Base Agent",
+    "duty": "keep the knowledge base current",
+    "kw": [
+     "knowledge base",
+     "faq",
+     "help center",
+     "support article",
+     "wiki"
+    ],
+    "does": "update the articles and fix outdated ones",
+    "done": "the knowledge base is updated",
+    "state": "researching",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "Budget Lead",
+    "duty": "own the budget and spending limits",
+    "kw": [
+     "budget",
+     "spend",
+     "cost",
+     "billing"
+    ],
+    "does": "set the budget and flag overspend",
+    "done": "the budget is set",
+    "state": "thinking",
+    "head": true
+   },
+   {
+    "role": "Token Tracker",
+    "duty": "count tokens and model usage",
+    "kw": [
+     "token usage",
+     "tokens",
+     "model usage",
+     "context cost"
+    ],
+    "does": "measure token use per task",
+    "done": "token use is measured",
+    "state": "running",
+    "head": false
+   },
+   {
+    "role": "Cost Analyst",
+    "duty": "compare model and tool costs",
+    "kw": [
+     "cheaper",
+     "price",
+     "pricing",
+     "compare cost",
+     "model cost",
+     "expensive"
+    ],
+    "does": "compare the options and pick the cheapest that works",
+    "done": "the cost comparison is ready",
+    "state": "researching",
+    "head": false
+   },
+   {
+    "role": "Forecaster",
+    "duty": "estimate what work will cost",
+    "kw": [
+     "estimate",
+     "forecast",
+     "projection",
+     "how much"
+    ],
+    "does": "estimate the cost and time range",
+    "done": "the estimate is ready",
+    "state": "thinking",
+    "head": false
+   },
+   {
+    "role": "Limit Guard",
+    "duty": "enforce quotas and limits",
+    "kw": [
+     "quota",
+     "rate limit",
+     "cap",
+     "throttle",
+     "alert on spend"
+    ],
+    "does": "set the caps and alert on spend",
+    "done": "the limits are in place",
+    "state": "running",
+    "head": false
+   }
+  ],
+  [
+   {
+    "role": "Review Lead",
+    "duty": "run the final review gate",
+    "kw": [
+     "final check",
+     "approval",
+     "gate",
+     "go no go",
+     "sign off",
+     "signoff"
+    ],
+    "does": "check every earlier stage and give a go or no go",
+    "done": "the review is signed off",
+    "state": "thinking",
+    "head": true
+   },
+   {
+    "role": "Merge Gatekeeper",
+    "duty": "decide what can merge",
+    "kw": [
+     "merge",
+     "pull request",
+     "branch",
+     "conflict"
+    ],
+    "does": "check the checks and approve the merge",
+    "done": "the merge is approved",
+    "state": "coding",
+    "head": false
+   },
+   {
+    "role": "Compliance Reviewer",
+    "duty": "check work against rules",
+    "kw": [
+     "compliance",
+     "regulation",
+     "license",
+     "legal",
+     "gdpr",
+     "terms"
+    ],
+    "does": "check the change against the rules",
+    "done": "the compliance review is done",
+    "state": "researching",
+    "head": false
+   },
+   {
+    "role": "Risk Assessor",
+    "duty": "rate the risk of a change",
+    "kw": [
+     "risk",
+     "impact",
+     "rollback plan",
+     "blast radius",
+     "danger"
+    ],
+    "does": "rate the risk and ask for a rollback plan",
+    "done": "the risk is rated",
+    "state": "thinking",
+    "head": false
+   },
+   {
+    "role": "Sign-off Agent",
+    "duty": "record who approved what",
+    "kw": [
+     "sign off",
+     "approved by",
+     "approval log",
+     "audit log"
+    ],
+    "does": "record the approvals in the log",
+    "done": "the approvals are logged",
+    "state": "writing",
+    "head": false
+   }
+  ]
+ ],
+ "people": [
+  {
+   "id": 0,
+   "name": "Amina",
+   "office": "Front End Dev",
+   "officeIdx": 0,
+   "roleIdx": 0,
+   "role": "Head of Front End Dev",
+   "isHead": true
+  },
+  {
+   "id": 1,
+   "name": "Brian",
+   "office": "Front End Dev",
+   "officeIdx": 0,
+   "roleIdx": 1,
+   "role": "Component Builder",
+   "isHead": false
+  },
+  {
+   "id": 2,
+   "name": "Chen",
+   "office": "Front End Dev",
+   "officeIdx": 0,
+   "roleIdx": 2,
+   "role": "Accessibility Agent",
+   "isHead": false
+  },
+  {
+   "id": 3,
+   "name": "Daniela",
+   "office": "Front End Dev",
+   "officeIdx": 0,
+   "roleIdx": 3,
+   "role": "Animation Agent",
+   "isHead": false
+  },
+  {
+   "id": 4,
+   "name": "Eli",
+   "office": "Front End Dev",
+   "officeIdx": 0,
+   "roleIdx": 4,
+   "role": "Styling Agent",
+   "isHead": false
+  },
+  {
+   "id": 5,
+   "name": "Fatuma",
+   "office": "Back End Dev",
+   "officeIdx": 1,
+   "roleIdx": 0,
+   "role": "Head of Back End Dev",
+   "isHead": true
+  },
+  {
+   "id": 6,
+   "name": "Gabriel",
+   "office": "Back End Dev",
+   "officeIdx": 1,
+   "roleIdx": 1,
+   "role": "Database Agent",
+   "isHead": false
+  },
+  {
+   "id": 7,
+   "name": "Hana",
+   "office": "Back End Dev",
+   "officeIdx": 1,
+   "roleIdx": 2,
+   "role": "Auth Agent",
+   "isHead": false
+  },
+  {
+   "id": 8,
+   "name": "Ivan",
+   "office": "Back End Dev",
+   "officeIdx": 1,
+   "roleIdx": 3,
+   "role": "Queue Worker",
+   "isHead": false
+  },
+  {
+   "id": 9,
+   "name": "Joy",
+   "office": "Back End Dev",
+   "officeIdx": 1,
+   "roleIdx": 4,
+   "role": "Cache Agent",
+   "isHead": false
+  },
+  {
+   "id": 10,
+   "name": "Kofi",
+   "office": "Skill Management",
+   "officeIdx": 2,
+   "roleIdx": 0,
+   "role": "Head of Skill Management",
+   "isHead": true
+  },
+  {
+   "id": 11,
+   "name": "Lena",
+   "office": "Skill Management",
+   "officeIdx": 2,
+   "roleIdx": 1,
+   "role": "Skill Registry",
+   "isHead": false
+  },
+  {
+   "id": 12,
+   "name": "Musa",
+   "office": "Skill Management",
+   "officeIdx": 2,
+   "roleIdx": 2,
+   "role": "Skill Router",
+   "isHead": false
+  },
+  {
+   "id": 13,
+   "name": "Nia",
+   "office": "Skill Management",
+   "officeIdx": 2,
+   "roleIdx": 3,
+   "role": "Skill Tester",
+   "isHead": false
+  },
+  {
+   "id": 14,
+   "name": "Omar",
+   "office": "Skill Management",
+   "officeIdx": 2,
+   "roleIdx": 4,
+   "role": "Skill Curator",
+   "isHead": false
+  },
+  {
+   "id": 15,
+   "name": "Priya",
+   "office": "MCP Management",
+   "officeIdx": 3,
+   "roleIdx": 0,
+   "role": "Head of MCP Management",
+   "isHead": true
+  },
+  {
+   "id": 16,
+   "name": "Quinn",
+   "office": "MCP Management",
+   "officeIdx": 3,
+   "roleIdx": 1,
+   "role": "Tool Registry",
+   "isHead": false
+  },
+  {
+   "id": 17,
+   "name": "Rosa",
+   "office": "MCP Management",
+   "officeIdx": 3,
+   "roleIdx": 2,
+   "role": "Connector Agent",
+   "isHead": false
+  },
+  {
+   "id": 18,
+   "name": "Sami",
+   "office": "MCP Management",
+   "officeIdx": 3,
+   "roleIdx": 3,
+   "role": "Protocol Agent",
+   "isHead": false
+  },
+  {
+   "id": 19,
+   "name": "Tariq",
+   "office": "MCP Management",
+   "officeIdx": 3,
+   "roleIdx": 4,
+   "role": "Server Monitor",
+   "isHead": false
+  },
+  {
+   "id": 20,
+   "name": "Uma",
+   "office": "Research Agents",
+   "officeIdx": 4,
+   "roleIdx": 0,
+   "role": "Head of Research Agents",
+   "isHead": true
+  },
+  {
+   "id": 21,
+   "name": "Victor",
+   "office": "Research Agents",
+   "officeIdx": 4,
+   "roleIdx": 1,
+   "role": "Paper Reader",
+   "isHead": false
+  },
+  {
+   "id": 22,
+   "name": "Wanjiru",
+   "office": "Research Agents",
+   "officeIdx": 4,
+   "roleIdx": 2,
+   "role": "Fact Checker",
+   "isHead": false
+  },
+  {
+   "id": 23,
+   "name": "Xavier",
+   "office": "Research Agents",
+   "officeIdx": 4,
+   "roleIdx": 3,
+   "role": "Summarizer",
+   "isHead": false
+  },
+  {
+   "id": 24,
+   "name": "Yara",
+   "office": "Research Agents",
+   "officeIdx": 4,
+   "roleIdx": 4,
+   "role": "Source Tracker",
+   "isHead": false
+  },
+  {
+   "id": 25,
+   "name": "Zane",
+   "office": "Memory & Context",
+   "officeIdx": 5,
+   "roleIdx": 0,
+   "role": "Head of Memory & Context",
+   "isHead": true
+  },
+  {
+   "id": 26,
+   "name": "Abel",
+   "office": "Memory & Context",
+   "officeIdx": 5,
+   "roleIdx": 1,
+   "role": "Context Packer",
+   "isHead": false
+  },
+  {
+   "id": 27,
+   "name": "Bella",
+   "office": "Memory & Context",
+   "officeIdx": 5,
+   "roleIdx": 2,
+   "role": "Vector Indexer",
+   "isHead": false
+  },
+  {
+   "id": 28,
+   "name": "Caleb",
+   "office": "Memory & Context",
+   "officeIdx": 5,
+   "roleIdx": 3,
+   "role": "Profile Agent",
+   "isHead": false
+  },
+  {
+   "id": 29,
+   "name": "Dina",
+   "office": "Memory & Context",
+   "officeIdx": 5,
+   "roleIdx": 4,
+   "role": "Archivist",
+   "isHead": false
+  },
+  {
+   "id": 30,
+   "name": "Ethan",
+   "office": "QA & Testing",
+   "officeIdx": 6,
+   "roleIdx": 0,
+   "role": "Head of QA & Testing",
+   "isHead": true
+  },
+  {
+   "id": 31,
+   "name": "Farah",
+   "office": "QA & Testing",
+   "officeIdx": 6,
+   "roleIdx": 1,
+   "role": "E2E Tester",
+   "isHead": false
+  },
+  {
+   "id": 32,
+   "name": "Grace",
+   "office": "QA & Testing",
+   "officeIdx": 6,
+   "roleIdx": 2,
+   "role": "Bug Triager",
+   "isHead": false
+  },
+  {
+   "id": 33,
+   "name": "Hugo",
+   "office": "QA & Testing",
+   "officeIdx": 6,
+   "roleIdx": 3,
+   "role": "Perf Tester",
+   "isHead": false
+  },
+  {
+   "id": 34,
+   "name": "Imani",
+   "office": "QA & Testing",
+   "officeIdx": 6,
+   "roleIdx": 4,
+   "role": "Code Reviewer",
+   "isHead": false
+  },
+  {
+   "id": 35,
+   "name": "Jonas",
+   "office": "DevOps",
+   "officeIdx": 7,
+   "roleIdx": 0,
+   "role": "Head of DevOps",
+   "isHead": true
+  },
+  {
+   "id": 36,
+   "name": "Kito",
+   "office": "DevOps",
+   "officeIdx": 7,
+   "roleIdx": 1,
+   "role": "CI Runner",
+   "isHead": false
+  },
+  {
+   "id": 37,
+   "name": "Layla",
+   "office": "DevOps",
+   "officeIdx": 7,
+   "roleIdx": 2,
+   "role": "Infra Agent",
+   "isHead": false
+  },
+  {
+   "id": 38,
+   "name": "Mateo",
+   "office": "DevOps",
+   "officeIdx": 7,
+   "roleIdx": 3,
+   "role": "Monitor Agent",
+   "isHead": false
+  },
+  {
+   "id": 39,
+   "name": "Neema",
+   "office": "DevOps",
+   "officeIdx": 7,
+   "roleIdx": 4,
+   "role": "Release Manager",
+   "isHead": false
+  },
+  {
+   "id": 40,
+   "name": "Otieno",
+   "office": "Security",
+   "officeIdx": 8,
+   "roleIdx": 0,
+   "role": "Head of Security",
+   "isHead": true
+  },
+  {
+   "id": 41,
+   "name": "Pia",
+   "office": "Security",
+   "officeIdx": 8,
+   "roleIdx": 1,
+   "role": "Secret Scanner",
+   "isHead": false
+  },
+  {
+   "id": 42,
+   "name": "Ravi",
+   "office": "Security",
+   "officeIdx": 8,
+   "roleIdx": 2,
+   "role": "Audit Agent",
+   "isHead": false
+  },
+  {
+   "id": 43,
+   "name": "Sana",
+   "office": "Security",
+   "officeIdx": 8,
+   "roleIdx": 3,
+   "role": "Sandbox Agent",
+   "isHead": false
+  },
+  {
+   "id": 44,
+   "name": "Tomas",
+   "office": "Security",
+   "officeIdx": 8,
+   "roleIdx": 4,
+   "role": "Policy Agent",
+   "isHead": false
+  },
+  {
+   "id": 45,
+   "name": "Ursula",
+   "office": "Orchestrator",
+   "officeIdx": 9,
+   "roleIdx": 0,
+   "role": "Head of Orchestrator",
+   "isHead": true
+  },
+  {
+   "id": 46,
+   "name": "Vik",
+   "office": "Orchestrator",
+   "officeIdx": 9,
+   "roleIdx": 1,
+   "role": "Task Router",
+   "isHead": false
+  },
+  {
+   "id": 47,
+   "name": "Wendy",
+   "office": "Orchestrator",
+   "officeIdx": 9,
+   "roleIdx": 2,
+   "role": "Scheduler",
+   "isHead": false
+  },
+  {
+   "id": 48,
+   "name": "Yusuf",
+   "office": "Orchestrator",
+   "officeIdx": 9,
+   "roleIdx": 3,
+   "role": "Supervisor",
+   "isHead": false
+  },
+  {
+   "id": 49,
+   "name": "Zola",
+   "office": "Orchestrator",
+   "officeIdx": 9,
+   "roleIdx": 4,
+   "role": "Handoff Agent",
+   "isHead": false
+  },
+  {
+   "id": 50,
+   "name": "Zuri",
+   "office": "Design & UX",
+   "officeIdx": 10,
+   "roleIdx": 0,
+   "role": "Head of Design & UX",
+   "isHead": true
+  },
+  {
+   "id": 51,
+   "name": "Ade",
+   "office": "Design & UX",
+   "officeIdx": 10,
+   "roleIdx": 1,
+   "role": "Visual Designer",
+   "isHead": false
+  },
+  {
+   "id": 52,
+   "name": "Bako",
+   "office": "Design & UX",
+   "officeIdx": 10,
+   "roleIdx": 2,
+   "role": "Prototyper",
+   "isHead": false
+  },
+  {
+   "id": 53,
+   "name": "Cleo",
+   "office": "Design & UX",
+   "officeIdx": 10,
+   "roleIdx": 3,
+   "role": "Design System Agent",
+   "isHead": false
+  },
+  {
+   "id": 54,
+   "name": "Dara",
+   "office": "Design & UX",
+   "officeIdx": 10,
+   "roleIdx": 4,
+   "role": "Usability Researcher",
+   "isHead": false
+  },
+  {
+   "id": 55,
+   "name": "Efe",
+   "office": "Data & Analytics",
+   "officeIdx": 11,
+   "roleIdx": 0,
+   "role": "Head of Data & Analytics",
+   "isHead": true
+  },
+  {
+   "id": 56,
+   "name": "Faro",
+   "office": "Data & Analytics",
+   "officeIdx": 11,
+   "roleIdx": 1,
+   "role": "Dashboard Builder",
+   "isHead": false
+  },
+  {
+   "id": 57,
+   "name": "Gita",
+   "office": "Data & Analytics",
+   "officeIdx": 11,
+   "roleIdx": 2,
+   "role": "Metrics Agent",
+   "isHead": false
+  },
+  {
+   "id": 58,
+   "name": "Hiro",
+   "office": "Data & Analytics",
+   "officeIdx": 11,
+   "roleIdx": 3,
+   "role": "Data Engineer",
+   "isHead": false
+  },
+  {
+   "id": 59,
+   "name": "Inez",
+   "office": "Data & Analytics",
+   "officeIdx": 11,
+   "roleIdx": 4,
+   "role": "Reporting Agent",
+   "isHead": false
+  },
+  {
+   "id": 60,
+   "name": "Ayo",
+   "office": "Product & Planning",
+   "officeIdx": 12,
+   "roleIdx": 0,
+   "role": "Head of Product & Planning",
+   "isHead": true
+  },
+  {
+   "id": 61,
+   "name": "Bahati",
+   "office": "Product & Planning",
+   "officeIdx": 12,
+   "roleIdx": 1,
+   "role": "Requirements Analyst",
+   "isHead": false
+  },
+  {
+   "id": 62,
+   "name": "Cyrus",
+   "office": "Product & Planning",
+   "officeIdx": 12,
+   "roleIdx": 2,
+   "role": "Roadmap Planner",
+   "isHead": false
+  },
+  {
+   "id": 63,
+   "name": "Dalia",
+   "office": "Product & Planning",
+   "officeIdx": 12,
+   "roleIdx": 3,
+   "role": "Prioritizer",
+   "isHead": false
+  },
+  {
+   "id": 64,
+   "name": "Emeka",
+   "office": "Product & Planning",
+   "officeIdx": 12,
+   "roleIdx": 4,
+   "role": "Spec Writer",
+   "isHead": false
+  },
+  {
+   "id": 65,
+   "name": "Farid",
+   "office": "Docs & Knowledge",
+   "officeIdx": 13,
+   "roleIdx": 0,
+   "role": "Head of Docs & Knowledge",
+   "isHead": true
+  },
+  {
+   "id": 66,
+   "name": "Gaia",
+   "office": "Docs & Knowledge",
+   "officeIdx": 13,
+   "roleIdx": 1,
+   "role": "Technical Writer",
+   "isHead": false
+  },
+  {
+   "id": 67,
+   "name": "Hassan",
+   "office": "Docs & Knowledge",
+   "officeIdx": 13,
+   "roleIdx": 2,
+   "role": "API Docs Agent",
+   "isHead": false
+  },
+  {
+   "id": 68,
+   "name": "Ife",
+   "office": "Docs & Knowledge",
+   "officeIdx": 13,
+   "roleIdx": 3,
+   "role": "Changelog Agent",
+   "isHead": false
+  },
+  {
+   "id": 69,
+   "name": "Jabari",
+   "office": "Docs & Knowledge",
+   "officeIdx": 13,
+   "roleIdx": 4,
+   "role": "Knowledge Base Agent",
+   "isHead": false
+  },
+  {
+   "id": 70,
+   "name": "Kemi",
+   "office": "Cost & Budget",
+   "officeIdx": 14,
+   "roleIdx": 0,
+   "role": "Head of Cost & Budget",
+   "isHead": true
+  },
+  {
+   "id": 71,
+   "name": "Leo",
+   "office": "Cost & Budget",
+   "officeIdx": 14,
+   "roleIdx": 1,
+   "role": "Token Tracker",
+   "isHead": false
+  },
+  {
+   "id": 72,
+   "name": "Mira",
+   "office": "Cost & Budget",
+   "officeIdx": 14,
+   "roleIdx": 2,
+   "role": "Cost Analyst",
+   "isHead": false
+  },
+  {
+   "id": 73,
+   "name": "Nuru",
+   "office": "Cost & Budget",
+   "officeIdx": 14,
+   "roleIdx": 3,
+   "role": "Forecaster",
+   "isHead": false
+  },
+  {
+   "id": 74,
+   "name": "Obi",
+   "office": "Cost & Budget",
+   "officeIdx": 14,
+   "roleIdx": 4,
+   "role": "Limit Guard",
+   "isHead": false
+  },
+  {
+   "id": 75,
+   "name": "Paz",
+   "office": "Review & Approvals",
+   "officeIdx": 15,
+   "roleIdx": 0,
+   "role": "Head of Review & Approvals",
+   "isHead": true
+  },
+  {
+   "id": 76,
+   "name": "Rhea",
+   "office": "Review & Approvals",
+   "officeIdx": 15,
+   "roleIdx": 1,
+   "role": "Merge Gatekeeper",
+   "isHead": false
+  },
+  {
+   "id": 77,
+   "name": "Sefu",
+   "office": "Review & Approvals",
+   "officeIdx": 15,
+   "roleIdx": 2,
+   "role": "Compliance Reviewer",
+   "isHead": false
+  },
+  {
+   "id": 78,
+   "name": "Tala",
+   "office": "Review & Approvals",
+   "officeIdx": 15,
+   "roleIdx": 3,
+   "role": "Risk Assessor",
+   "isHead": false
+  },
+  {
+   "id": 79,
+   "name": "Umar",
+   "office": "Review & Approvals",
+   "officeIdx": 15,
+   "roleIdx": 4,
+   "role": "Sign-off Agent",
+   "isHead": false
+  }
+ ],
+ "stages": [
+  {
+   "name": "Prepare",
+   "offices": [
+    "Product & Planning",
+    "Research Agents",
+    "Design & UX",
+    "Orchestrator",
+    "Memory & Context",
+    "Cost & Budget"
+   ]
+  },
+  {
+   "name": "Build",
+   "offices": [
+    "Back End Dev",
+    "Front End Dev",
+    "Data & Analytics",
+    "Skill Management",
+    "MCP Management"
+   ]
+  },
+  {
+   "name": "Verify",
+   "offices": [
+    "QA & Testing",
+    "Security",
+    "Review & Approvals"
+   ]
+  },
+  {
+   "name": "Ship",
+   "offices": [
+    "DevOps",
+    "Docs & Knowledge"
+   ]
+  }
+ ],
+ "alwaysOn": [
+  "Product & Planning",
+  "Cost & Budget",
+  "QA & Testing",
+  "Review & Approvals"
+ ]
+};

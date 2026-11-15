@@ -1,0 +1,11 @@
+{
+  "name": "3d-company-launcher",
+  "version": "1.0.0",
+  "private": true,
+  "bin": {
+    "3DCOMPANY": "Company_Floor/company-floor/3DCOMPANY.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
