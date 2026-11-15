@@ -5,7 +5,7 @@ REPO="toxicme1/3D-Company"
 INSTALL_DIR="${HOME}/.local/share/3d-company"
 BIN_DIR="${HOME}/.local/bin"
 COMMAND_PATH="${BIN_DIR}/3DCOMPANY"
-ARCHIVE_URL="https://codeload.github.com/${REPO}/tar.gz/refs/heads/main"
+PUBLIC_ARCHIVE_URL="https://codeload.github.com/${REPO}/tar.gz/refs/heads/main"
 
 if ! command -v curl >/dev/null 2>&1 || ! command -v tar >/dev/null 2>&1; then
   echo "This installer needs curl and tar." >&2
@@ -32,7 +32,13 @@ fi
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 mkdir -p "$TMP_DIR/extract" "$HOME/.local/share" "$BIN_DIR"
-curl --fail --location --silent --show-error --retry 3 "$ARCHIVE_URL" -o "$TMP_DIR/source.tar.gz"
+if [[ -n "${GH_TOKEN:-}" ]]; then
+  printf 'header = "Authorization: Bearer %s"\nheader = "Accept: application/vnd.github+json"\nurl = "https://api.github.com/repos/%s/tarball/main"\n' \
+    "$GH_TOKEN" "$REPO" |
+    curl --fail --location --silent --show-error --retry 3 --output "$TMP_DIR/source.tar.gz" --config -
+else
+  curl --fail --location --silent --show-error --retry 3 "$PUBLIC_ARCHIVE_URL" -o "$TMP_DIR/source.tar.gz"
+fi
 tar -xzf "$TMP_DIR/source.tar.gz" --strip-components=1 -C "$TMP_DIR/extract"
 
 SOURCE_DIR="$TMP_DIR/extract/Company_Floor"

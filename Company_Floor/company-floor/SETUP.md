@@ -5,14 +5,22 @@
 - A modern browser with WebGL and internet access for the 3D libraries.
 - An API key from OpenRouter or another OpenAI-compatible provider.
 
-## 2. Install directly from GitHub on Linux
-Run this in a terminal:
+## 2. Install from the private GitHub repository on Linux
+Install GitHub CLI and sign in first if needed (`gh auth login`). Then run:
+
+```bash
+gh api -H 'Accept: application/vnd.github.raw' \
+  'repos/toxicme1/3D-Company/contents/install.sh?ref=main' \
+  | GH_TOKEN="$(gh auth token)" bash
+```
+
+This fetches the installer and source archive using your GitHub CLI login. It installs under `~/.local/share/3d-company` and creates `~/.local/bin/3DCOMPANY`. It requires `gh`, `curl`, `tar`, and Node.js 18 or newer; it does not require `git` or `sudo`.
+
+If the repo is public, this simpler command works without GitHub CLI:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/toxicme1/3D-Company/main/install.sh | bash
 ```
-
-The installer downloads the latest `main` branch archive, installs the app under `~/.local/share/3d-company`, and creates `~/.local/bin/3DCOMPANY`. It requires `curl`, `tar`, and Node.js 18 or newer; it does not require `git` or `sudo`.
 
 If prompted to add `~/.local/bin` to your PATH, run:
 
