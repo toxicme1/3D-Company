@@ -5,12 +5,27 @@
 - A modern browser with WebGL and internet access for the 3D libraries.
 - An API key from OpenRouter or another OpenAI-compatible provider.
 
-## 2. Install the `3DCOMPANY` command (once)
-From the repository root, run:
+## 2. Install directly from GitHub on Linux
+Run this in a terminal:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/toxicme1/3D-Company/main/install.sh | bash
+```
+
+The installer downloads the latest `main` branch archive, installs the app under `~/.local/share/3d-company`, and creates `~/.local/bin/3DCOMPANY`. It requires `curl`, `tar`, and Node.js 18 or newer; it does not require `git` or `sudo`.
+
+If prompted to add `~/.local/bin` to your PATH, run:
+
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+    source ~/.bashrc
+
+Then run `3DCOMPANY`.
+
+If you already cloned the repository, you can instead install the command with `npm link` from its root:
 
     npm link
 
-This registers the command on npm's global executable path. Then `3DCOMPANY` can be run from any terminal folder. If the command is not found, add npm's global bin directory to your PATH (on Windows, restart the terminal after changing PATH).
+This registers the command on npm's global executable path. Then `3DCOMPANY` can be run from any terminal folder.
 
 ## 3. First run and provider setup
 Run:
